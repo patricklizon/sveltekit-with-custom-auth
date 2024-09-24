@@ -25,7 +25,12 @@ export const users = sqliteTable(
 		deletedAt: integer('deleted_at', { mode: 'timestamp' }),
 		email: text('email').notNull().unique(),
 		emailVerified: integer('email_verified', { mode: 'boolean' }).notNull().default(false),
-		twoFactorAuthenticationEnabled: integer('two_factor_authentication_enabled', {
+		registered2FA: integer('two_factor_authentication_enabled', {
+			mode: 'boolean'
+		})
+			.notNull()
+			.default(false),
+		twoFactorVerified: integer('two_factor_authentication_enabled', {
 			mode: 'boolean'
 		})
 			.notNull()

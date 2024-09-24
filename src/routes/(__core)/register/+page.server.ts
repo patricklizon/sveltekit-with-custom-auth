@@ -10,6 +10,8 @@ import {
 	LoginWithCredentialsUseCase
 } from '$lib/server/modules/__core/user';
 import { PasswordHasher, CookieSessionManager } from '$lib/server/infrastructure/__core/security';
+import { resolveRoute } from '$app/paths';
+import { RawPath } from '$lib/routes';
 
 // TODO: add dependency injection
 const userRepository = new UserRepository();
@@ -72,6 +74,6 @@ export const actions: Actions = {
 			// TODO: log error, logout and redirect to error page with `throw error()`
 		}
 
-		throw redirect(302, '/confirm-email');
+		throw redirect(302, resolveRoute(RawPath.Home, {}));
 	}
 };

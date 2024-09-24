@@ -3,6 +3,8 @@ import { error, fail, redirect, type Actions } from '@sveltejs/kit';
 import { PasswordHasher, CookieSessionManager } from '$lib/server/infrastructure/__core/security';
 import { LoginWithCredentialsUseCase, UserRepository } from '$lib/server/modules/__core/user';
 import { ReadRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
+import { resolveRoute } from '$app/paths';
+import { RawPath } from '$lib/routes';
 
 const cookieSessionManager = new CookieSessionManager();
 const userRepository = new UserRepository();
@@ -73,12 +75,12 @@ export const actions: Actions = {
 			}
 		}
 
-		const fallbackAppUrl = '/home';
-		const redirectUrl = readRedirectSearchParam
-			.execute(new URL(event.request.url))
-			.mapErr(console.error)
-			.unwrapOr(fallbackAppUrl);
+		const fallbackRoute = resolveRoute(RawPath.Register, {});
+		const currentURL = new URL(event.request.url);
+		const redirectRoute =
+			readRedirectSearchParam.execute(currentURL).mapErr(console.error).unwrapOr(fallbackRoute) ??
+			fallbackRoute;
 
-		throw redirect(302, redirectUrl ?? fallbackAppUrl);
+		throw redirect(302, redirectRoute);
 	}
 };

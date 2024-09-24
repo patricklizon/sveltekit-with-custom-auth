@@ -1,8 +1,12 @@
-export enum DatabaseErrorType {
-	Read = '@@database/Read',
-	Write = '@@database/Write',
-	EntityNotFound = '@@database/EntityNotFound'
-}
+import type { Enum } from '$lib/types';
+
+export const DatabaseErrorType = {
+	Read: 'database/error/Read',
+	Write: 'database/error/Write',
+	EntityNotFound: 'database/error/EntityNotFound'
+} as const;
+
+export type DatabaseErrorType = Enum<typeof DatabaseErrorType>;
 
 export class DatabaseReadError extends Error {
 	constructor(public error: unknown) {

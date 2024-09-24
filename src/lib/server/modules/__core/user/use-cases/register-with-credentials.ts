@@ -48,7 +48,8 @@ export class RegisterWithCredentialsUseCase {
 				email: input.email,
 				emailVerified: false,
 				id: createId(),
-				twoFactorAuthenticationEnabled: false
+				registered2FA: false,
+				twoFactorVerified: false
 			} satisfies User;
 
 			const hashedPassword = await this.hasher.hash(input.password);

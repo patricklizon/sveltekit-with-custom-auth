@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolveRoute } from '$app/paths';
+	import { RawPath } from '$lib/routes';
 	import type { SubmitFunction } from './$types';
 	let isSubmitting = $state(false);
 
@@ -15,7 +17,7 @@
 
 <h1>register</h1>
 
-<a href="/logout">logout</a>
+<a href={resolveRoute(RawPath.Logout, {})}>logout</a>
 
 <form method="POST" use:enhance={handleSubmit}>
 	<label for="email">Email</label>

@@ -18,7 +18,8 @@ export const lucia = new Lucia(adapter, {
 			email: attributes.email,
 			id: attributes.id,
 			emailVerified: attributes.emailVerified,
-			twoFactorAuthenticationEnabled: attributes.twoFactorAuthenticationEnabled
+			registered2FA: attributes.registered2FA,
+			twoFactorVerified: attributes.twoFactorVerified
 		} satisfies User;
 	}
 });

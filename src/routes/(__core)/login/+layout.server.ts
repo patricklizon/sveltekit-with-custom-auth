@@ -1,21 +1,23 @@
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 import { ReadRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
+import { isValidUserSession } from '$lib/server/infrastructure/__core/security';
+import { resolveRoute } from '$app/paths';
+import { RawPath } from '$lib/routes';
 
 const readRedirectSearchParam = new ReadRedirectSearchParamUseCase();
 
 export const load: LayoutServerLoad = async (event) => {
-	if (!event.locals.user) {
+	if (!isValidUserSession(event.locals)) {
 		return;
 	}
 
-	const fallbackAppUrl = '/home';
-
+	const fallbackRoute = resolveRoute(RawPath.Home, {});
+	const currentURL = new URL(event.request.url);
 	// TODO: verify and add sentry
-	const redirectUrl = readRedirectSearchParam
-		.execute(new URL(event.request.url))
-		.mapErr(console.error)
-		.unwrapOr(fallbackAppUrl);
+	const redirectRoute =
+		readRedirectSearchParam.execute(currentURL).mapErr(console.error).unwrapOr(fallbackRoute) ??
+		fallbackRoute;
 
-	throw redirect(302, redirectUrl ?? fallbackAppUrl);
+	throw redirect(302, redirectRoute);
 };

@@ -9,17 +9,20 @@
  */
 
 import { DomainError } from '$lib/errors';
+import type { Enum } from '$lib/types';
 
-export enum UserErrorType {
-	InvalidData = 'domain/user/error/InvalidData',
-	AlreadyExists = 'domain/user/error/AlreadyExists',
-	NonExisting = 'domain/user/error/NonExisting',
-	InvalidPassword = 'domain/user/error/InvalidPassword',
-	DataCorruption = 'domain/user/error/DataCorruption',
-	Validation = 'domain/user/error/Validation'
-}
+export const UserErrorType = {
+	InvalidData: 'domain/user/error/InvalidData',
+	AlreadyExists: 'domain/user/error/AlreadyExists',
+	NonExisting: 'domain/user/error/NonExisting',
+	InvalidPassword: 'domain/user/error/InvalidPassword',
+	DataCorruption: 'domain/user/error/DataCorruption',
+	Validation: 'domain/user/error/Validation'
+} as const;
 
-export class UserInvalidDataError extends DomainError<UserErrorType.InvalidData> {
+export type UserErrorType = Enum<typeof UserErrorType>;
+
+export class UserInvalidDataError extends DomainError<typeof UserErrorType.InvalidData> {
 	constructor(message: string) {
 		super(UserErrorType.InvalidData, undefined, message);
 	}

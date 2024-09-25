@@ -1,7 +1,7 @@
 import type { Option } from '$lib/types';
 import type { UserRepository } from '../repository';
 import {
-	UserAccountCorruptionError,
+	UserCorruptionError,
 	UserDoesNotExistsError,
 	UserInvalidPasswordError,
 	type UserPlainTextPassword,
@@ -28,7 +28,7 @@ type UseCaseInput = Readonly<{
 
 type UseCaseResult = ResultAsync<
 	Readonly<User>,
-	UserInvalidPasswordError | UserDoesNotExistsError | UserAccountCorruptionError
+	UserInvalidPasswordError | UserDoesNotExistsError | UserCorruptionError
 >;
 
 export class LoginWithCredentialsUseCase {
@@ -39,7 +39,7 @@ export class LoginWithCredentialsUseCase {
 	) {}
 
 	async execute(ctx: UseCaseContext, input: UseCaseInput): Promise<UseCaseResult> {
-		const user = await this.userRepository.findByEmail(input.email);
+		const user = await this.userRepository.findUserByEmail(input.email);
 		if (!user) {
 			await this.simulatePasswordVerification();
 			return err(new UserDoesNotExistsError(input.email));
@@ -49,7 +49,7 @@ export class LoginWithCredentialsUseCase {
 		if (!password) {
 			await this.simulatePasswordVerification();
 			return err(
-				new UserAccountCorruptionError('User found but password not found', { email: user.email })
+				new UserCorruptionError('User found but password not found', { email: user.email })
 			);
 		}
 

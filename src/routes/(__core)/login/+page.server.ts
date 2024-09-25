@@ -5,6 +5,7 @@ import { LoginWithCredentialsUseCase, UserRepository } from '$lib/server/modules
 import { ReadRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
 import { resolveRoute } from '$app/paths';
 import { RawPath } from '$lib/routes';
+import type { FormFail, FormParseFail } from '$lib/types';
 
 const cookieSessionManager = new CookieSessionManager();
 const userRepository = new UserRepository();
@@ -23,13 +24,12 @@ export const actions: Actions = {
 		const parseResult = await userLoginWithCredentialsDataSchema.safeParseAsync(formData);
 
 		if (!parseResult.success) {
-			// TODO: define fail object
 			return fail(400, {
 				success: false,
 				data: formData,
 				errorType: UserErrorType.Validation,
 				errorByFieldName: parseResult.error.flatten().fieldErrors
-			});
+			} satisfies FormParseFail<typeof formData>);
 		}
 
 		const loginResult = await loginWithCredentialsUseCase.execute(
@@ -47,30 +47,28 @@ export const actions: Actions = {
 		if (loginResult.isErr()) {
 			switch (loginResult.error.type) {
 				case UserErrorType.NonExisting: {
-					// TODO: define fail object
 					return fail(401, {
 						success: false,
 						data: loginResult.error.data,
-						error: loginResult.error.message,
+						errorMessage: loginResult.error.message,
 						errorType: loginResult.error.type
-					});
-				}
-				case UserErrorType.InvalidPassword: {
-					// TODO: notify user on suspicious activity, should be done in the usecase
-					// TODO: define fail object
-					return fail(401, {
-						success: false,
-						data: loginResult.error.data,
-						error: loginResult.error.message,
-						errorType: loginResult.error.type
-					});
+					} satisfies FormFail<typeof loginResult.error.data>);
 				}
 
-				case UserErrorType.DataCorruption:
-				default: {
+				case UserErrorType.InvalidPassword: {
+					// TODO: notify user on suspicious activity, should be done in the usecase
+					return fail(401, {
+						success: false,
+						data: loginResult.error.data,
+						errorMessage: loginResult.error.message,
+						errorType: loginResult.error.type
+					} satisfies FormFail<typeof loginResult.error.data>);
+				}
+
+				case UserErrorType.DataCorruption: {
 					// TODO: log error to logger (tbd. pnp wrapper for sentry, better stack)
 					// TODO: better message
-					throw error(500, { message: loginResult.error.message });
+					throw error(500, loginResult.error);
 				}
 			}
 		}

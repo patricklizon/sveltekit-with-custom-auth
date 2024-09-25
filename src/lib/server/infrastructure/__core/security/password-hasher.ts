@@ -2,18 +2,13 @@ import type { UserHashedPassword, UserPlainTextPassword } from '$lib/shared/doma
 import { safeCastId } from '$lib/shared/domain/__core/id';
 import { Argon2id } from 'oslo/password';
 
-export interface IPasswordHasher {
-	hash(password: UserPlainTextPassword): Promise<UserHashedPassword>;
-	verify(UserHashedPassword: UserHashedPassword, password: UserPlainTextPassword): Promise<boolean>;
-}
-
 /**
  * Provides methods for hashing and verifying passwords using the Argon2id algorithm.
  * Uses domain types for better type safety.
  *
  */
 
-export class PasswordHasher implements IPasswordHasher {
+export class PasswordHasher {
 	constructor(private hasher = new Argon2id()) {}
 
 	async hash(password: UserPlainTextPassword): Promise<UserHashedPassword> {

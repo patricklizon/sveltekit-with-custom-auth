@@ -2,7 +2,8 @@ import type {
 	UserHashedPassword,
 	ExternalAccountProviderId,
 	UserExternalAccountId,
-	UserId
+	UserId,
+	UserPasswordResetRequestId
 } from '../../../../../shared/domain/__core/user';
 import { createId } from '../../../../../shared/domain/__core/id';
 
@@ -16,25 +17,16 @@ import { sqlDefaultCreatedAt, sqlDefaultUpdatedAt } from '../../utils';
 export const users = sqliteTable(
 	'user',
 	{
-		id: text('id').notNull().primaryKey().$type<UserId>(),
+		id: text('id').notNull().primaryKey().$default(createId).$type<UserId>(),
 		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$default(sqlDefaultCreatedAt),
 		updatedAt: integer('updated_at', { mode: 'timestamp' })
 			.notNull()
-			.$default(sqlDefaultCreatedAt)
 			.$onUpdate(sqlDefaultUpdatedAt),
 		deletedAt: integer('deleted_at', { mode: 'timestamp' }),
 		email: text('email').notNull().unique(),
 		emailVerified: integer('email_verified', { mode: 'boolean' }).notNull().default(false),
-		registered2FA: integer('two_factor_authentication_enabled', {
-			mode: 'boolean'
-		})
-			.notNull()
-			.default(false),
-		twoFactorVerified: integer('two_factor_authentication_enabled', {
-			mode: 'boolean'
-		})
-			.notNull()
-			.default(false)
+		twoFactorEnabled: integer('enabled', { mode: 'boolean' }).notNull().default(false),
+		twoFactorVerified: integer('verified', { mode: 'boolean' }).notNull().default(false)
 	},
 	(table) => ({
 		emailIdx: index('email_idx').on(table.email)
@@ -47,8 +39,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
 		references: [userPasswords.userId]
 	}),
 	externalAccounts: many(userExternalAccounts),
-	emailChanges: many(emailChangesRequests),
-	passwordResets: many(passwordResetRequests)
+	emailChangeRequestss: many(userEmailChangesRequests),
+	passwordResetRequestss: many(userPasswordResetRequests)
 }));
 
 /**
@@ -60,7 +52,8 @@ export const userPasswords = sqliteTable('user_password', {
 		.references(() => users.id)
 		.$type<UserId>(),
 	hashedPassword: text('hashed_password').notNull().$type<UserHashedPassword>(),
-	lastChangedAt: integer('created_at', { mode: 'timestamp' })
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$default(sqlDefaultCreatedAt),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$onUpdate(sqlDefaultUpdatedAt)
 });
 
 export const usersPasswordsRelations = relations(userPasswords, ({ one }) => ({
@@ -73,29 +66,29 @@ export const usersPasswordsRelations = relations(userPasswords, ({ one }) => ({
 /**
  * Token for password reset flow
  */
-export const passwordResetRequests = sqliteTable('password_reset_request', {
-	id: text('id').notNull().primaryKey(),
+export const userPasswordResetRequests = sqliteTable('user_password_reset_request', {
+	id: text('id').notNull().primaryKey().$default(createId).$type<UserPasswordResetRequestId>(),
 	userId: text('user_id')
 		.notNull()
 		.references(() => users.id)
 		.$type<UserId>(),
-	/** For non-2FA users */
-	token: text('token').notNull().unique(),
-	/** For 2FA users */
-	otp: text('otp'),
+	otp: text('otp').notNull().unique(),
 	expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
 	createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$default(sqlDefaultCreatedAt),
-	usedAt: integer('used_at', { mode: 'timestamp' })
+	verifiedAt: integer('verified_at', { mode: 'timestamp' })
 });
 
-export const passwordResetRequestsRelations = relations(passwordResetRequests, ({ one }) => ({
-	user: one(users, {
-		fields: [passwordResetRequests.userId],
-		references: [users.id]
+export const userPasswordResetRequestsRelations = relations(
+	userPasswordResetRequests,
+	({ one }) => ({
+		user: one(users, {
+			fields: [userPasswordResetRequests.userId],
+			references: [users.id]
+		})
 	})
-}));
+);
 
-export const emailChangesRequests = sqliteTable('email_change_request', {
+export const userEmailChangesRequests = sqliteTable('user_email_change_request', {
 	id: text('id').notNull().primaryKey(),
 	userId: text('user_id')
 		.notNull()
@@ -111,9 +104,9 @@ export const emailChangesRequests = sqliteTable('email_change_request', {
 	verifiedAt: integer('verified_at', { mode: 'timestamp' })
 });
 
-export const emailChangesRelations = relations(emailChangesRequests, ({ one }) => ({
+export const userEmailChangesRelations = relations(userEmailChangesRequests, ({ one }) => ({
 	user: one(users, {
-		fields: [emailChangesRequests.userId],
+		fields: [userEmailChangesRequests.userId],
 		references: [users.id]
 	})
 }));
@@ -125,18 +118,13 @@ export const emailChangesRelations = relations(emailChangesRequests, ({ one }) =
 export const userExternalAccounts = sqliteTable(
 	'user_external_account',
 	{
-		id: text('id')
-			.primaryKey()
-			.notNull()
-			.$default(() => createId())
-			.$type<UserExternalAccountId>(),
+		id: text('id').primaryKey().notNull().$default(createId).$type<UserExternalAccountId>(),
 		userId: text('user_id')
 			.references(() => users.id)
 			.$type<UserId>(),
 		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$default(sqlDefaultCreatedAt),
 		updatedAt: integer('updated_at', { mode: 'timestamp' })
 			.notNull()
-			.$default(sqlDefaultCreatedAt)
 			.$onUpdate(sqlDefaultUpdatedAt),
 		providerId: text('provider_id').notNull().$type<ExternalAccountProviderId>(),
 		providerUserId: text('provider_user_id').notNull().$type<UserExternalAccountId>()

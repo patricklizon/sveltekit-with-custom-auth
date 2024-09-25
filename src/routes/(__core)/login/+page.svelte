@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+
 	import { enhance } from '$app/forms';
-	import { UserErrorType } from '$lib/shared/domain/__core/user';
-	import type {  SubmitFunction } from './$types';
+	import type {  ActionData, SubmitFunction } from './$types';
 
 	const handleSubmit: SubmitFunction = () => {
 		return ({ update }) => {
@@ -10,7 +9,7 @@
 		};
 	};
 
-
+	export let form: ActionData;
 
 </script>
 
@@ -25,8 +24,8 @@
 		<label for="email">Email</label>
 		<input id="email" name="email" type="email" required autocomplete="email" />
 
-		{#if $page.form?.errorByFieldName?.email}
-			<p class="error">{$page.form?.errorByFieldName?.email}</p>
+		{#if form?.errorByFieldName?.email}
+			<p class="error">{form.errorByFieldName?.email}</p>
 		{/if}
 	</div>
 
@@ -38,8 +37,8 @@
 	<button type="submit">Log In</button>
 </form>
 
-{#if $page.form?.errorType === UserErrorType.InvalidPassword || $page.form?.errorType === UserErrorType.NonExisting}
-	<p class="error">{$page.form?.error}</p>
+{#if form?.errorMessage}
+	<p class="error">{form.errorMessage}</p>
 {/if}
 
 <style>

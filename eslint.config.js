@@ -80,7 +80,10 @@ const typescriptConfig = {
 		'@typescript-eslint/prefer-reduce-type-parameter': 'error',
 		'@typescript-eslint/prefer-return-this-type': 'error',
 		'@typescript-eslint/prefer-string-starts-ends-with': 'error',
-		'@typescript-eslint/switch-exhaustiveness-check': 'error',
+		'@typescript-eslint/switch-exhaustiveness-check': [
+			'error',
+			{ allowDefaultCaseForExhaustiveSwitch: false }
+		],
 		'@typescript-eslint/no-unnecessary-condition': 'error',
 		'@typescript-eslint/no-non-null-assertion': 'error',
 		'@typescript-eslint/consistent-type-assertions': [

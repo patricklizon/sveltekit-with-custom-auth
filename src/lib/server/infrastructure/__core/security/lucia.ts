@@ -7,7 +7,6 @@ import type { User } from '$lib/shared/domain/__core/user';
 const adapter = new DrizzleSQLiteAdapter(database, sessions, users);
 
 export const lucia = new Lucia(adapter, {
-	// Set session expiration to 2 weeks
 	sessionExpiresIn: new TimeSpan(2, 'w'),
 	sessionCookie: {
 		attributes: { secure: !dev } // Use secure cookies in production
@@ -18,7 +17,7 @@ export const lucia = new Lucia(adapter, {
 			email: attributes.email,
 			id: attributes.id,
 			emailVerified: attributes.emailVerified,
-			registered2FA: attributes.registered2FA,
+			twoFactorEnabled: attributes.twoFactorEnabled,
 			twoFactorVerified: attributes.twoFactorVerified
 		} satisfies User;
 	}

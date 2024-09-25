@@ -7,7 +7,6 @@ import {
 	type UserPlainTextPassword
 } from '$lib/shared/domain/__core/user';
 import { err, ok, ResultAsync } from 'neverthrow';
-import { createId } from '$lib/shared/domain/__core/id';
 import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
 import { UnexpectedError } from '$lib/errors';
 
@@ -44,22 +43,28 @@ export class RegisterWithCredentialsUseCase {
 				return err(new UserInvalidDataError(validationResult.error.message));
 			}
 
-			const user = {
-				email: input.email,
-				emailVerified: false,
-				id: createId(),
-				registered2FA: false,
-				twoFactorVerified: false
-			} satisfies User;
-
 			const hashedPassword = await this.hasher.hash(input.password);
-			await this.userRepository.save(user, hashedPassword);
+			const result = await this.userRepository.save(
+				{
+					email: input.email,
+					emailVerified: false,
+					twoFactorEnabled: false,
+					twoFactorVerified: false
+				},
+				hashedPassword
+			);
 
 			// TODO: implement notification through 'communication channel -> email'
 			// await this.sendWelcomeEmail.execute(user.email);
 			// await this.sendRegistrationConfirmation.execute(user.email);
 
-			return ok(user);
+			return ok({
+				email: result.email,
+				emailVerified: result.emailVerified,
+				id: result.id,
+				twoFactorEnabled: result.twoFactorEnabled,
+				twoFactorVerified: result.emailVerified
+			});
 		} catch (error: unknown) {
 			return err(new UnexpectedError(error));
 		}

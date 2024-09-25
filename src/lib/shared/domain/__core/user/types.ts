@@ -1,5 +1,9 @@
 import type { Id } from '$lib/shared/domain/__core/id';
-import type { users, userPasswords } from '$lib/server/infrastructure/persistance';
+import type {
+	users,
+	userPasswords,
+	userPasswordResetRequests
+} from '$lib/server/infrastructure/persistance';
 
 /* USER */
 
@@ -13,6 +17,8 @@ export type UserDBInsertModel = typeof users.$inferInsert;
 export type User = Omit<UserDBSelectModel, 'createdAt' | 'updatedAt' | 'deletedAt'>;
 
 export type UserUpdateDTO = Omit<Partial<User>, 'id' | 'twoFactorEnabled'>;
+
+export type UserRegisterDTO = Omit<User, 'id'>;
 
 /* USER PASSWORD */
 
@@ -47,10 +53,24 @@ export type UserRegisterWithCredentialsFormData = Readonly<{
 	passwordConfirmation: UserPlainTextPassword;
 }>;
 
-/* CHANGE */
+/* RESET PASSWORD */
 
-export type UserChangeEmailDTO = Readonly<{
-	currentEmail: User['email'];
-	nextEmail: User['email'];
-	nextEmailConfirmation: User['email'];
+export type UserPasswordResetRequestId = Id<'user-password-reset-request'>;
+export type UserPasswordResetRequestsDBSelectModel = typeof userPasswordResetRequests.$inferSelect;
+export type UserPasswordResetRequestsDBInsertModel = typeof userPasswordResetRequests.$inferInsert;
+
+export type UserPasswordResetRequest = Omit<UserPasswordResetRequestsDBSelectModel, 'createdAt'>;
+
+export type UserCreatePasswordResetRequestDTO = Pick<
+	UserPasswordResetRequestsDBInsertModel,
+	'otp' | 'expiresAt' | 'userId'
+>;
+
+export type UserInitializeResetPasswordFormData = Readonly<{
+	email: User['email'];
+}>;
+
+export type UserConfirmResetPasswordFormData = Readonly<{
+	passwordResetRequestId: UserPasswordResetRequest['id'];
+	otp: UserPasswordResetRequest['otp'];
 }>;

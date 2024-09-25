@@ -12,6 +12,7 @@ import {
 import { PasswordHasher, CookieSessionManager } from '$lib/server/infrastructure/__core/security';
 import { resolveRoute } from '$app/paths';
 import { RawPath } from '$lib/routes';
+import type { FormFail, FormParseFail } from '$lib/types';
 
 // TODO: add dependency injection
 const userRepository = new UserRepository();
@@ -27,17 +28,19 @@ const loginWithCredentialsUseCase = new LoginWithCredentialsUseCase(
 export const actions: Actions = {
 	default: async (event) => {
 		const formData = Object.fromEntries(await event.request.formData());
-		const parseResult = await userRegistrationWithCredentialsDataSchema.safeParseAsync(formData);
+		const formDataParseResult =
+			await userRegistrationWithCredentialsDataSchema.safeParseAsync(formData);
 
-		if (!parseResult.success) {
+		if (!formDataParseResult.success) {
 			return fail(400, {
 				success: false,
-				data: formData,
-				errors: parseResult.error.flatten().fieldErrors
-			});
+				data: formDataParseResult,
+				errorType: UserErrorType.Validation,
+				errorByFieldName: formDataParseResult.error.flatten().fieldErrors
+			} satisfies FormParseFail);
 		}
 
-		const parsedData = parseResult.data;
+		const parsedData = formDataParseResult.data;
 		const registrationResult = await registerWithCredentialsUseCase.execute(parsedData);
 
 		if (registrationResult.isErr()) {
@@ -46,8 +49,10 @@ export const actions: Actions = {
 				case UserErrorType.InvalidData: {
 					return fail(400, {
 						success: false,
-						...registrationResult.error
-					});
+						data: registrationResult.error.data,
+						errorMessage: registrationResult.error.message,
+						errorType: registrationResult.error.type
+					} satisfies FormFail);
 				}
 				// TODO: improve error handling
 				case 'unexpected': {
@@ -69,6 +74,7 @@ export const actions: Actions = {
 			}
 		);
 
+		// TODO: handle
 		if (loginResult.isErr()) {
 			console.error('Login failed after successful registration:', loginResult.error);
 			// TODO: log error, logout and redirect to error page with `throw error()`

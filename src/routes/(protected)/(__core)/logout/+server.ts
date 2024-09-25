@@ -13,7 +13,7 @@ const logoutUseCase = new LogoutUseCase(cookieSessionManager);
 
 export const GET: RequestHandler = async ({ cookies, locals }) => {
 	if (!isValidUserSession(locals)) {
-		throw redirect(302, resolveRoute(RawPath.Root, {}));
+		throw redirect(302, resolveRoute(RawPath.Landing, {}));
 	}
 
 	await logoutUseCase.execute(cookies);

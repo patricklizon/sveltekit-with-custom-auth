@@ -26,6 +26,9 @@ export abstract class DomainError<
 	}
 }
 
+export const UnexpectedErrorType = 'unexpected';
+export type UnexpectedErrorType = typeof UnexpectedErrorType;
+
 /**
  * Wrapper for unexpected errors that occur during runtime.
  *

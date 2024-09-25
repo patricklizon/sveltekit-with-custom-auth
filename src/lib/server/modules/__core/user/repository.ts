@@ -4,12 +4,16 @@ import type {
 	UserPasswordsDBSelectModel,
 	UserDBSelectModel,
 	UserUpdateDTO,
-	UserHashedPassword
+	UserHashedPassword,
+	UserCreatePasswordResetRequestDTO,
+	UserRegisterDTO,
+	UserPasswordResetRequest
 } from '$lib/shared/domain/__core/user';
 import {
 	database,
 	DatabaseReadError,
-	DatabaseWriteError
+	DatabaseWriteError,
+	userPasswordResetRequests
 } from '$lib/server/infrastructure/persistance';
 import { users, userPasswords } from '$lib/server/infrastructure/persistance';
 import { eq, sql } from 'drizzle-orm';
@@ -27,7 +31,7 @@ export class UserRepository {
 				.limit(1);
 
 			return credentials;
-		} catch (error: unknown) {
+		} catch (error) {
 			throw new DatabaseReadError(error);
 		}
 	}
@@ -36,16 +40,16 @@ export class UserRepository {
 		try {
 			const [user] = await this.db.select().from(users).where(eq(users.email, email)).limit(1);
 			return user;
-		} catch (error: unknown) {
+		} catch (error) {
 			throw new DatabaseReadError(error);
 		}
 	}
 
-	async findById(id: User['id']): Promise<Option<UserDBSelectModel>> {
+	async findUserById(id: User['id']): Promise<Option<UserDBSelectModel>> {
 		try {
 			const [user] = await this.db.select().from(users).where(eq(users.id, id)).limit(1);
 			return user;
-		} catch (error: unknown) {
+		} catch (error) {
 			throw new DatabaseReadError(error);
 		}
 	}
@@ -56,46 +60,49 @@ export class UserRepository {
 				.update(userPasswords)
 				.set({ hashedPassword })
 				.where(eq(userPasswords.userId, id));
-		} catch (error: unknown) {
+		} catch (error) {
 			throw new DatabaseWriteError(error);
 		}
 	}
 
-	async save(user: User, hashedPassword: UserHashedPassword): Promise<Option<UserDBSelectModel>> {
+	async save(
+		user: UserRegisterDTO,
+		hashedPassword: UserHashedPassword
+	): Promise<UserDBSelectModel> {
 		try {
 			return await this.db.transaction(async (trx) => {
 				const [result] = await trx.insert(users).values(user).returning();
+				if (!result) throw new DatabaseWriteError('Updating did not return any value');
 
 				await trx.insert(userPasswords).values({
 					hashedPassword,
-					userId: user.id
+					userId: result.id
 				});
 
 				return result;
 			});
-		} catch (error: unknown) {
+		} catch (error) {
 			throw new DatabaseWriteError(error);
 		}
 	}
 
-	async update(
-		id: User['id'],
-		updateData: Partial<UserUpdateDTO>
-	): Promise<Option<UserDBSelectModel>> {
+	async update(id: User['id'], updateData: Partial<UserUpdateDTO>): Promise<UserDBSelectModel> {
 		try {
-			const [updatedUser] = await this.db
+			const [result] = await this.db
 				.update(users)
 				.set(updateData)
 				.where(eq(users.id, id))
 				.returning();
 
-			return updatedUser;
-		} catch (error: unknown) {
+			if (!result) throw new DatabaseWriteError('Updating did not return any value');
+
+			return result;
+		} catch (error) {
 			throw new DatabaseWriteError(error);
 		}
 	}
 
-	async softDelete(id: User['id']): Promise<Option<User['id']>> {
+	async softDelete(id: User['id']): Promise<User['id']> {
 		try {
 			const [result] = await this.db
 				.update(users)
@@ -103,22 +110,85 @@ export class UserRepository {
 				.where(eq(users.id, id))
 				.returning({ id: users.id });
 
-			return result?.id;
-		} catch (error: unknown) {
+			if (!result) throw new DatabaseReadError('Deleting did not return any value');
+
+			return result.id;
+		} catch (error) {
 			throw new DatabaseWriteError(error);
 		}
 	}
 
 	// TODO: return error when not found
-	async delete(id: User['id']): Promise<Option<User['id']>> {
+	async delete(id: User['id']): Promise<User['id']> {
 		try {
 			const [result] = await this.db
 				.delete(users)
 				.where(eq(users.id, id))
 				.returning({ id: users.id });
 
-			return result?.id;
-		} catch (error: unknown) {
+			if (!result) throw new DatabaseWriteError('Deleting did not return any value');
+
+			return result.id;
+		} catch (error) {
+			throw new DatabaseWriteError(error);
+		}
+	}
+
+	async createPasswordResetRequest(
+		data: Readonly<UserCreatePasswordResetRequestDTO>
+	): Promise<UserPasswordResetRequest['id']> {
+		try {
+			const [result] = await this.db.insert(userPasswordResetRequests).values(data).returning();
+			if (!result) throw new DatabaseReadError('Creating request did not return any value');
+			return result.id;
+		} catch (error) {
+			throw new DatabaseWriteError(error);
+		}
+	}
+
+	async findPasswordResetRequestById(
+		id: UserPasswordResetRequest['id']
+	): Promise<Option<UserPasswordResetRequest>> {
+		try {
+			const [result] = await this.db
+				.select()
+				.from(userPasswordResetRequests)
+				.where(eq(userPasswordResetRequests.id, id))
+				.limit(1);
+			return result;
+		} catch (error) {
+			throw new DatabaseReadError(error);
+		}
+	}
+
+	async confirmPasswordResetRequest(
+		id: UserPasswordResetRequest['id']
+	): Promise<UserPasswordResetRequest> {
+		try {
+			const now = Date.now();
+			const [result] = await this.db
+				.update(userPasswordResetRequests)
+				.set({
+					// TODO: use library
+					expiresAt: new Date(now + 1000 * 60 * 10),
+					verifiedAt: new Date(now)
+				})
+				.where(eq(userPasswordResetRequests.id, id))
+				.returning();
+			if (!result) throw new DatabaseReadError('Inserting did not return any value');
+
+			return result;
+		} catch (error) {
+			throw new DatabaseWriteError(error);
+		}
+	}
+
+	async deletePasswordResetRequestsForUser(id: User['id']): Promise<void> {
+		try {
+			await this.db
+				.delete(userPasswordResetRequests)
+				.where(eq(userPasswordResetRequests.userId, id));
+		} catch (error) {
 			throw new DatabaseWriteError(error);
 		}
 	}

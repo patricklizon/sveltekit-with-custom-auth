@@ -31,7 +31,8 @@ export const load: LayoutServerLoad = async ({ locals, url, request }) => {
 		throw redirect(302, resolveRoute(RawPath.RegisterFinalize, {}));
 	}
 
-	if (locals.user.registered2FA && !locals.user.twoFactorVerified) {
-		throw redirect(302, resolveRoute(RawPath.TwoFactorAuthenticationVerify, {}));
+	// TODO: Verify link
+	if (locals.user.twoFactorEnabled && !locals.user.twoFactorVerified) {
+		throw redirect(302, resolveRoute(RawPath.TwoFactorAuthentication, {}));
 	}
 };

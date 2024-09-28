@@ -22,7 +22,7 @@ type UrlSearchParamReadContext = {
 
 /**
  * Defines the return types for different strategies.
- * Workaround used to correctly type `readUrlSearchParam`.
+ * Workaround used to correctly typed `readUrlSearchParam`.
  */
 type StrategyReturnType = {
 	[UrlSearchParamStrategy.ApplicationUrl]: ReturnType<typeof readApplicationUrlStrategy>;

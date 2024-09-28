@@ -2,13 +2,14 @@ import type { UserRepository } from '../repository';
 import {
 	UserAlreadyExistsError,
 	UserInvalidDataError,
-	userRegistrationWithCredentialsDataSchema,
 	type User,
 	type UserPlainTextPassword
 } from '$lib/shared/domain/__core/user';
 import { err, ok, ResultAsync } from 'neverthrow';
 import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
 import { UnexpectedError } from '$lib/errors';
+import { userRegistrationWithCredentialsFormDataSchema } from '$lib/shared/validators/__core/register';
+import type { EmailService } from '$lib/server/infrastructure/__core/email';
 
 type UseCaseInput = Readonly<{
 	email: User['email'];
@@ -24,7 +25,8 @@ type UseCaseResult = ResultAsync<
 export class RegisterWithCredentialsUseCase {
 	constructor(
 		private userRepository: UserRepository,
-		private hasher: PasswordHasher
+		private hasher: PasswordHasher,
+		private emailService: EmailService
 		// private sendWelcomeEmail: SendWelcomeEmailUsecase,
 		// private sendRegistrationConfirmation: SendRegistrationConfirmationEmailUsecase,
 	) {}
@@ -38,7 +40,7 @@ export class RegisterWithCredentialsUseCase {
 				return err(new UserAlreadyExistsError(input.email));
 			}
 
-			const validationResult = userRegistrationWithCredentialsDataSchema.safeParse(input);
+			const validationResult = userRegistrationWithCredentialsFormDataSchema.safeParse(input);
 			if (!validationResult.success) {
 				return err(new UserInvalidDataError(validationResult.error.message));
 			}
@@ -53,6 +55,14 @@ export class RegisterWithCredentialsUseCase {
 				},
 				hashedPassword
 			);
+
+			// TODO: create usecase
+			await this.emailService.send({
+				html: '<h1>you are registered</h1>',
+				subject: 'registration confirmation',
+				text: 'you are registered',
+				to: 'lizon.patryk@gmail.com'
+			});
 
 			// TODO: implement notification through 'communication channel -> email'
 			// await this.sendWelcomeEmail.execute(user.email);

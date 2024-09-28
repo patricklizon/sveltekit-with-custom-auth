@@ -1,46 +1,54 @@
-import type { UserRepository } from '../repository';
-import {
-	UserPasswordResetRequestExpiredError,
-	UserPasswordResetRequestInvalidCodeError,
-	UserPasswordResetRequestNonExistingError,
-	type UserPasswordResetRequest
-} from '$lib/shared/domain/__core/user';
-import { err, ok, ResultAsync } from 'neverthrow';
+import {} from '$lib/shared/domain/__core/user';
+import { err, ok, Result } from 'neverthrow';
 import { UnexpectedError } from '$lib/errors';
+import type {
+	UserRequestRepository,
+	ValidateUserRequestUseCase
+} from '$lib/server/modules/__core/user-request';
+import {
+	UserRequestInvalidCodeError,
+	type UserRequest,
+	type UserRequestExpiredError,
+	type UserRequestNonConfirmedError,
+	type UserRequestNonExistingError
+} from '$lib/shared/domain/__core/user-request';
 
 type UseCaseInput = Readonly<{
-	otp: UserPasswordResetRequest['otp'];
-	id: UserPasswordResetRequest['id'];
+	otp: UserRequest['otp'];
+	id: UserRequest['id'];
 }>;
 
-type UseCaseResult = ResultAsync<
-	boolean,
-	UserPasswordResetRequestExpiredError | UserPasswordResetRequestInvalidCodeError | UnexpectedError
+type UseCaseResult = Result<
+	UserRequest,
+	| UserRequestNonExistingError
+	| UserRequestExpiredError
+	| UserRequestNonConfirmedError
+	| UserRequestInvalidCodeError
+	| UnexpectedError
 >;
 
 export class ConfirmPasswordResetRequestUseCase {
-	constructor(private userRepository: UserRepository) {}
+	constructor(
+		private userRequestRepository: UserRequestRepository,
+		private validateUserRequestUseCase: ValidateUserRequestUseCase
+	) {}
 	async execute(input: UseCaseInput): Promise<UseCaseResult> {
 		try {
-			const passwordResetRequest = await this.userRepository.findPasswordResetRequestById(input.id);
-			if (!passwordResetRequest) {
-				throw new UserPasswordResetRequestNonExistingError(input.id);
+			const validationResult = await this.validateUserRequestUseCase.execute(input);
+			if (validationResult.isErr()) {
+				return err(validationResult.error);
 			}
 
-			if (passwordResetRequest.expiresAt.getTime() <= Date.now()) {
-				return err(new UserPasswordResetRequestExpiredError(passwordResetRequest.expiresAt));
+			if (validationResult.value.otp !== input.otp) {
+				return err(new UserRequestInvalidCodeError(input.id, input.otp));
 			}
 
-			if (passwordResetRequest.otp !== input.otp) {
-				return err(new UserPasswordResetRequestInvalidCodeError(input.id, input.otp));
-			}
-
-			const result = await this.userRepository.confirmPasswordResetRequest(input.id);
+			const result = await this.userRequestRepository.confirm(input.id);
 
 			// TODO: implement notification through 'communication channel -> email'
 			// await this.sendEmailWithConfirmation.execute(user.email);
 
-			return ok(!!result);
+			return ok(result);
 		} catch (error) {
 			return err(new UnexpectedError(error));
 		}

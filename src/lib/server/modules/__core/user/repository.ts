@@ -5,15 +5,12 @@ import type {
 	UserDBSelectModel,
 	UserUpdateDTO,
 	UserHashedPassword,
-	UserCreatePasswordResetRequestDTO,
-	UserRegisterDTO,
-	UserPasswordResetRequest
+	UserRegisterDTO
 } from '$lib/shared/domain/__core/user';
 import {
 	database,
 	DatabaseReadError,
-	DatabaseWriteError,
-	userPasswordResetRequests
+	DatabaseWriteError
 } from '$lib/server/infrastructure/persistance';
 import { users, userPasswords } from '$lib/server/infrastructure/persistance';
 import { eq, sql } from 'drizzle-orm';
@@ -129,65 +126,6 @@ export class UserRepository {
 			if (!result) throw new DatabaseWriteError('Deleting did not return any value');
 
 			return result.id;
-		} catch (error) {
-			throw new DatabaseWriteError(error);
-		}
-	}
-
-	async createPasswordResetRequest(
-		data: Readonly<UserCreatePasswordResetRequestDTO>
-	): Promise<UserPasswordResetRequest['id']> {
-		try {
-			const [result] = await this.db.insert(userPasswordResetRequests).values(data).returning();
-			if (!result) throw new DatabaseReadError('Creating request did not return any value');
-			return result.id;
-		} catch (error) {
-			throw new DatabaseWriteError(error);
-		}
-	}
-
-	async findPasswordResetRequestById(
-		id: UserPasswordResetRequest['id']
-	): Promise<Option<UserPasswordResetRequest>> {
-		try {
-			const [result] = await this.db
-				.select()
-				.from(userPasswordResetRequests)
-				.where(eq(userPasswordResetRequests.id, id))
-				.limit(1);
-			return result;
-		} catch (error) {
-			throw new DatabaseReadError(error);
-		}
-	}
-
-	async confirmPasswordResetRequest(
-		id: UserPasswordResetRequest['id']
-	): Promise<UserPasswordResetRequest> {
-		try {
-			const now = Date.now();
-			const [result] = await this.db
-				.update(userPasswordResetRequests)
-				.set({
-					// TODO: use library
-					expiresAt: new Date(now + 1000 * 60 * 10),
-					verifiedAt: new Date(now)
-				})
-				.where(eq(userPasswordResetRequests.id, id))
-				.returning();
-			if (!result) throw new DatabaseReadError('Inserting did not return any value');
-
-			return result;
-		} catch (error) {
-			throw new DatabaseWriteError(error);
-		}
-	}
-
-	async deletePasswordResetRequestsForUser(id: User['id']): Promise<void> {
-		try {
-			await this.db
-				.delete(userPasswordResetRequests)
-				.where(eq(userPasswordResetRequests.userId, id));
 		} catch (error) {
 			throw new DatabaseWriteError(error);
 		}

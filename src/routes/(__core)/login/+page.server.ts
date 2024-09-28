@@ -1,4 +1,4 @@
-import { UserErrorType, userLoginWithCredentialsDataSchema } from '$lib/shared/domain/__core/user';
+import { UserErrorType } from '$lib/shared/domain/__core/user';
 import { error, fail, redirect, type Actions } from '@sveltejs/kit';
 import { PasswordHasher, CookieSessionManager } from '$lib/server/infrastructure/__core/security';
 import { LoginWithCredentialsUseCase, UserRepository } from '$lib/server/modules/__core/user';
@@ -6,6 +6,7 @@ import { ReadRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-s
 import { resolveRoute } from '$app/paths';
 import { RawPath } from '$lib/routes';
 import type { FormFail, FormParseFail } from '$lib/types';
+import { loginWithCredentialsFormDataSchema } from '$lib/shared/validators/__core/login';
 
 const cookieSessionManager = new CookieSessionManager();
 const userRepository = new UserRepository();
@@ -21,7 +22,7 @@ const readRedirectSearchParam = new ReadRedirectSearchParamUseCase();
 export const actions: Actions = {
 	default: async (event) => {
 		const formData = Object.fromEntries(await event.request.formData());
-		const parseResult = await userLoginWithCredentialsDataSchema.safeParseAsync(formData);
+		const parseResult = await loginWithCredentialsFormDataSchema.safeParseAsync(formData);
 
 		if (!parseResult.success) {
 			return fail(400, {

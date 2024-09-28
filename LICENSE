@@ -1,0 +1,23 @@
+Headstart Commercial Source Code License
+
+This Headstart Commercial Source Code License ("License") governs the use of the source code ("Licensed Software") provided by Patryk Lizoń. ("Licensor").
+
+1. Grant of License:
+   The Licensor grants the Licensee a non-exclusive, non-transferable license to access, modify, and use the Licensed Software for business purposes, including developing, deploying, and maintaining applications for internal use or for providing services to clients.
+
+2. Source Code Access:
+   The Licensee is provided access to the Licensed Software's source code via a private Git repository. The Licensee may download and modify the source code solely for the purposes outlined in this License.
+
+3. Prohibited Actions:
+   The Licensee may not sell, sublicense, distribute, or make available the Licensed Software, whether in its original form or as modified, to any third party. This includes, but is not limited to, embedding the Licensed Software in a product intended for sale.
+
+4. Modification Rights:
+   The Licensee may modify the Licensed Software for internal use or client-facing applications but is strictly prohibited from distributing or selling any modifications or derivative works of the Licensed Software.
+
+5. Ownership:
+   The Licensor retains all ownership and intellectual property rights in the Licensed Software. This License does not transfer any ownership rights to the Licensee.
+
+6. Termination of Access:
+   The Licensor reserves the right to revoke the Licensee’s access to the Git repository and terminate this License if the Licensee is found to be in breach of any of the terms outlined herein.
+
+By accepting this License, the Licensee agrees to all of the above terms.

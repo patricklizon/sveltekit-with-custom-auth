@@ -1,7 +1,4 @@
-import {
-	UserErrorType,
-	userRegistrationWithCredentialsDataSchema
-} from '$lib/shared/domain/__core/user';
+import { UserErrorType } from '$lib/shared/domain/__core/user';
 
 import { error, fail, redirect, type Actions } from '@sveltejs/kit';
 import {
@@ -13,12 +10,19 @@ import { PasswordHasher, CookieSessionManager } from '$lib/server/infrastructure
 import { resolveRoute } from '$app/paths';
 import { RawPath } from '$lib/routes';
 import type { FormFail, FormParseFail } from '$lib/types';
+import { userRegistrationWithCredentialsFormDataSchema } from '$lib/shared/validators/__core/register';
+import { EmailService } from '$lib/server/infrastructure/__core/email';
 
 // TODO: add dependency injection
 const userRepository = new UserRepository();
 const hasher = new PasswordHasher();
 const cookieSessionManager = new CookieSessionManager();
-const registerWithCredentialsUseCase = new RegisterWithCredentialsUseCase(userRepository, hasher);
+const emailService = new EmailService();
+const registerWithCredentialsUseCase = new RegisterWithCredentialsUseCase(
+	userRepository,
+	hasher,
+	emailService
+);
 const loginWithCredentialsUseCase = new LoginWithCredentialsUseCase(
 	userRepository,
 	hasher,
@@ -29,7 +33,7 @@ export const actions: Actions = {
 	default: async (event) => {
 		const formData = Object.fromEntries(await event.request.formData());
 		const formDataParseResult =
-			await userRegistrationWithCredentialsDataSchema.safeParseAsync(formData);
+			await userRegistrationWithCredentialsFormDataSchema.safeParseAsync(formData);
 
 		if (!formDataParseResult.success) {
 			return fail(400, {

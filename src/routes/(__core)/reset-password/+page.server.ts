@@ -3,23 +3,28 @@ import { UnexpectedErrorType } from '$lib/errors';
 import { RawPath } from '$lib/routes';
 import { TwoFactor } from '$lib/server/infrastructure/__core/security';
 import { UserRepository } from '$lib/server/modules/__core/user';
+import { UserRequestRepository } from '$lib/server/modules/__core/user-request';
 import { CreatePasswordResetRequestUseCase } from '$lib/server/modules/__core/user/use-cases/create-password-reset-request';
-import {
-	UserErrorType,
-	userInitializePasswordResetDataSchema
-} from '$lib/shared/domain/__core/user';
+import { UserErrorType } from '$lib/shared/domain/__core/user';
+import { resetPasswordStartProcessFormDataSchema } from '$lib/shared/validators/__core/';
+
 import type { FormFail, FormParseFail } from '$lib/types';
 import { fail, error, redirect, type Actions } from '@sveltejs/kit';
 
 const twoFactor = new TwoFactor();
 const userRepository = new UserRepository();
-const createPasswordResetRequest = new CreatePasswordResetRequestUseCase(userRepository, twoFactor);
+const userRequestRepository = new UserRequestRepository();
+const createPasswordResetRequest = new CreatePasswordResetRequestUseCase(
+	userRepository,
+	userRequestRepository,
+	twoFactor
+);
 
 export const actions: Actions = {
 	deafult: async ({ request }) => {
 		const formData = Object.fromEntries(await request.formData());
 		const formDataParseResult =
-			await userInitializePasswordResetDataSchema.safeParseAsync(formData);
+			await resetPasswordStartProcessFormDataSchema.safeParseAsync(formData);
 
 		if (!formDataParseResult.success) {
 			return fail(400, {

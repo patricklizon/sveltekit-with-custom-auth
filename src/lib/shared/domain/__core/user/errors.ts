@@ -10,18 +10,14 @@
 
 import { DomainError } from '$lib/errors';
 import type { Enum } from '$lib/types';
-import type { User, UserPasswordResetRequest } from './types';
+import type { User } from './types';
 export const UserErrorType = {
 	InvalidData: 'domain/user/error/InvalidData',
 	AlreadyExists: 'domain/user/error/AlreadyExists',
 	NonExisting: 'domain/user/error/NonExisting',
 	InvalidPassword: 'domain/user/error/InvalidPassword',
 	DataCorruption: 'domain/user/error/DataCorruption',
-	Validation: 'domain/user/error/Validation',
-	PasswordResetRequestExpired: 'domain/user/error/PasswordResetRequestExpired',
-	PasswordResetRequestNonVerified: 'domain/user/error/PasswordResetRequestNonVerified',
-	PasswordResetRequestNonExisting: 'domain/user/error/PasswordResetRequestNonExisting',
-	PasswordResetRequestInvalidCode: 'domain/user/error/PasswordResetRequestInvalidCode'
+	Validation: 'domain/user/error/Validation'
 } as const;
 
 export type UserErrorType = Enum<typeof UserErrorType>;
@@ -59,57 +55,5 @@ export class UserInvalidPasswordError extends DomainError<typeof UserErrorType.I
 export class UserCorruptionError extends DomainError<typeof UserErrorType.DataCorruption, unknown> {
 	constructor(message: string, data?: unknown) {
 		super(UserErrorType.DataCorruption, data, message);
-	}
-}
-
-export class UserPasswordResetRequestExpiredError extends DomainError<
-	typeof UserErrorType.PasswordResetRequestExpired,
-	{ expiredAt: Date }
-> {
-	constructor(expiredAt: Date) {
-		super(
-			UserErrorType.PasswordResetRequestExpired,
-			{ expiredAt },
-			// TODO: format date
-			`Token expired at ${expiredAt.getTime()}`
-		);
-	}
-}
-
-export class UserPasswordResetRequestNonExistingError extends DomainError<
-	typeof UserErrorType.PasswordResetRequestNonExisting,
-	{ passwordResetRequestId: UserPasswordResetRequest['id'] }
-> {
-	constructor(passwordResetRequestId: UserPasswordResetRequest['id']) {
-		super(UserErrorType.PasswordResetRequestNonExisting, { passwordResetRequestId });
-	}
-}
-
-export class UserPasswordResetRequestInvalidCodeError extends DomainError<
-	typeof UserErrorType.PasswordResetRequestInvalidCode,
-	{ passwordResetRequestId: UserPasswordResetRequest['id']; otp: UserPasswordResetRequest['otp'] }
-> {
-	constructor(
-		passwordResetRequestId: UserPasswordResetRequest['id'],
-		otp: UserPasswordResetRequest['otp']
-	) {
-		super(
-			UserErrorType.PasswordResetRequestInvalidCode,
-			{ passwordResetRequestId, otp },
-			`Entered code is invalid`
-		);
-	}
-}
-
-export class UserPasswordResetRequestNonVerifiedError extends DomainError<
-	typeof UserErrorType.PasswordResetRequestNonVerified,
-	{ passwordResetRequestId: UserPasswordResetRequest['id'] }
-> {
-	constructor(passwordResetRequestId: UserPasswordResetRequest['id']) {
-		super(
-			UserErrorType.PasswordResetRequestNonVerified,
-			{ passwordResetRequestId },
-			'Password change request was not verified.'
-		);
 	}
 }

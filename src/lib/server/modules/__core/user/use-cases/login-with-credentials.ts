@@ -39,7 +39,7 @@ export class LoginWithCredentialsUseCase {
 	) {}
 
 	async execute(ctx: UseCaseContext, input: UseCaseInput): Promise<UseCaseResult> {
-		const user = await this.userRepository.findUserByEmail(input.email);
+		const user = await this.userRepository.findByEmail(input.email);
 		if (!user) {
 			await this.simulatePasswordVerification();
 			return err(new UserDoesNotExistsError(input.email));

@@ -1,25 +1,21 @@
-import type { UserRepository } from '../repository';
-import {
-	UserDoesNotExistsError,
-	type User,
-	type UserPasswordResetRequest
-} from '$lib/shared/domain/__core/user';
+import { UserDoesNotExistsError, type User } from '$lib/shared/domain/__core/user';
 import { err, ok, ResultAsync } from 'neverthrow';
 import { UnexpectedError } from '$lib/errors';
 import { TwoFactor } from '$lib/server/infrastructure/__core/security';
+import type { UserRequest } from '$lib/shared/domain/__core/user-request';
+import type { UserRequestRepository } from '$lib/server/modules//__core/user-request';
+import type { UserRepository } from '../repository';
 
 type UseCaseInput = Readonly<{
 	email: User['email'];
 }>;
 
-type UseCaseResult = ResultAsync<
-	UserPasswordResetRequest['id'],
-	UserDoesNotExistsError | UnexpectedError
->;
+type UseCaseResult = ResultAsync<UserRequest['id'], UserDoesNotExistsError | UnexpectedError>;
 
 export class CreatePasswordResetRequestUseCase {
 	constructor(
 		private userRepository: UserRepository,
+		private userRequestRepository: UserRequestRepository,
 		private twoFactor: TwoFactor
 	) {}
 	async execute(input: UseCaseInput): Promise<UseCaseResult> {
@@ -30,12 +26,14 @@ export class CreatePasswordResetRequestUseCase {
 				return err(new UserDoesNotExistsError(input.email));
 			}
 
-			await this.userRepository.deletePasswordResetRequestsForUser(user.id);
+			// TODO: extract 'password_reset' to enum
+			await this.userRequestRepository.deleteAllByUserId('password_reset', user.id);
 
-			const requestId = await this.userRepository.createPasswordResetRequest({
+			const requestId = await this.userRequestRepository.save({
 				otp: this.twoFactor.generateOTP(),
 				expiresAt: new Date(Date.now() + 1000 * 60 * 10),
-				userId: user.id
+				userId: user.id,
+				type: 'password_reset'
 			});
 
 			// TODO: implement notification through 'communication channel -> email'

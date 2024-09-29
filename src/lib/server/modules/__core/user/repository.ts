@@ -5,7 +5,8 @@ import type {
 	UserDBSelectModel,
 	UserUpdateDTO,
 	UserHashedPassword,
-	UserRegisterDTO
+	UserRegisterDTO,
+	UserPlainTextPassword
 } from '$lib/shared/domain/__core/user';
 import {
 	database,
@@ -14,9 +15,13 @@ import {
 } from '$lib/server/infrastructure/persistance';
 import { users, userPasswords } from '$lib/server/infrastructure/persistance';
 import { eq, sql } from 'drizzle-orm';
+import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
 
 export class UserRepository {
-	constructor(private db = database) {}
+	constructor(
+		private hasher: PasswordHasher,
+		private db = database
+	) {}
 
 	// TODO: handle error. This select will throw when nothing nothing is found
 	async findUserPasswordById(id: User['id']): Promise<Option<UserPasswordsDBSelectModel>> {
@@ -51,6 +56,19 @@ export class UserRepository {
 		}
 	}
 
+	async getUserEmail(id: User['id']): Promise<Option<{ email: string; isVerified: boolean }>> {
+		try {
+			const [data] = await this.db
+				.select({ email: users.email, isVerified: users.emailVerified })
+				.from(users)
+				.where(eq(users.id, id))
+				.limit(1);
+			return data;
+		} catch (error) {
+			throw new DatabaseReadError(error);
+		}
+	}
+
 	async updatePassword(id: User['id'], hashedPassword: UserHashedPassword): Promise<void> {
 		try {
 			await this.db
@@ -62,17 +80,19 @@ export class UserRepository {
 		}
 	}
 
-	async save(
-		user: UserRegisterDTO,
-		hashedPassword: UserHashedPassword
-	): Promise<UserDBSelectModel> {
+	async save(user: UserRegisterDTO, password: UserPlainTextPassword): Promise<UserDBSelectModel> {
 		try {
 			return await this.db.transaction(async (trx) => {
-				const [result] = await trx.insert(users).values(user).returning();
+				const [result] = await trx
+					.insert(users)
+					.values({
+						email: user.email
+					})
+					.returning();
 				if (!result) throw new DatabaseWriteError('Updating did not return any value');
 
 				await trx.insert(userPasswords).values({
-					hashedPassword,
+					hashedPassword: await this.hasher.hash(password),
 					userId: result.id
 				});
 

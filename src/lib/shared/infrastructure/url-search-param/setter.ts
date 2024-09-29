@@ -14,8 +14,8 @@ import { err, ok, type Result } from 'neverthrow';
 type UrlSearchParamWriteContext = {
 	/** The name of the URL search parameter. */
 	paramName: Readonly<UrlSearchParamName>;
-	/** The base URL to which the parameter will be added. */
-	baseURL: Readonly<URL>;
+	/** The URL to which the parameter will be added. */
+	url: Readonly<URL>;
 };
 
 /**
@@ -33,7 +33,7 @@ type StrategyReturnType = {
 const strategyByName = {
 	[UrlSearchParamStrategy.ApplicationUrl]: setApplicationUrlStrategy,
 	[UrlSearchParamStrategy.Primitive]: setPrimitiveStrategy
-} as const satisfies Record<keyof StrategyReturnType, (...params: never[]) => Result<URL, unknown>>;
+} as const;
 
 /**
  * Sets a URL search parameter using the specified strategy.
@@ -58,18 +58,18 @@ export function setUrlSearchParam<S extends keyof StrategyReturnType>(
 function setApplicationUrlStrategy(
 	ctx: Readonly<UrlSearchParamWriteContext>,
 	href: Readonly<string>
-): Result<URL, never> {
-	const result = new URL(ctx.baseURL);
+): URL {
+	const result = new URL(ctx.url);
 	const absolutePath = mapURLtoAbsoluteUrlPathWithSearchAndFragment(new URL(href, 'http://x'));
 	const value = encodeURI(normalizeAbsoluteUrlPath(absolutePath));
-	if (!value) return ok(result);
+	if (!value) return result;
 
 	const displayName = urlSearchParamDisplayNameByUrlSearchParamName[ctx.paramName];
-	const serializedValue = SerializationPrefix.AppHref + value;
+	const serializedValue = SerializationPrefix.AppRoute + value;
 	const encodedValue = encodeURIComponent(serializedValue);
 	result.searchParams.set(displayName, encodedValue);
 
-	return ok(result);
+	return result;
 }
 
 /**
@@ -79,7 +79,7 @@ function setPrimitiveStrategy(
 	ctx: Readonly<UrlSearchParamWriteContext>,
 	primitive: Readonly<string | number | boolean>
 ): Result<URL, UrlSearchParamSerializationError> {
-	const result = new URL(ctx.baseURL);
+	const result = new URL(ctx.url);
 
 	const paramName = urlSearchParamDisplayNameByUrlSearchParamName[ctx.paramName];
 

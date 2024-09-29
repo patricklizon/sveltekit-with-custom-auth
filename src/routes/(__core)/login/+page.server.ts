@@ -9,8 +9,8 @@ import type { FormFail, FormParseFail } from '$lib/types';
 import { loginWithCredentialsFormDataSchema } from '$lib/shared/validators/__core/login';
 
 const cookieSessionManager = new CookieSessionManager();
-const userRepository = new UserRepository();
 const hasher = new PasswordHasher();
+const userRepository = new UserRepository(hasher);
 const loginWithCredentialsUseCase = new LoginWithCredentialsUseCase(
 	userRepository,
 	hasher,

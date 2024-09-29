@@ -2,23 +2,24 @@ import { UrlSearchParamStrategy } from '../config';
 import { setUrlSearchParam } from '../setter';
 import { UrlSearchParamName } from '../types';
 
-type UseCaseCtx = {
-	baseURL: URL;
-};
-
 // TODO: create typed application path Id type
 // for example: /login /home/nested/test
-type UseCaseInput = string;
+type UseCaseInput = {
+	url: URL;
+	paramValue: string;
+};
 
 export class SetRedirectSearchParamUseCase {
-	execute(ctx: UseCaseCtx, input: UseCaseInput): ReturnType<typeof setUrlSearchParam> {
+	execute(
+		input: UseCaseInput
+	): ReturnType<typeof setUrlSearchParam<typeof UrlSearchParamStrategy.ApplicationUrl>> {
 		return setUrlSearchParam(
 			UrlSearchParamStrategy.ApplicationUrl,
 			{
 				paramName: UrlSearchParamName.Redirect,
-				baseURL: ctx.baseURL
+				url: input.url
 			},
-			input
+			input.paramValue
 		);
 	}
 }

@@ -1,9 +1,9 @@
-import {} from '$lib/shared/domain/__core/user';
+import { type UserPlainTextOTP } from '$lib/shared/domain/__core/user';
 import { err, ok, Result } from 'neverthrow';
 import { UnexpectedError } from '$lib/errors';
 import type {
 	UserRequestRepository,
-	ValidateUserRequestUseCase
+	IsUserRequestCorrectUseCase
 } from '$lib/server/modules/__core/user-request';
 import {
 	UserRequestInvalidCodeError,
@@ -12,10 +12,12 @@ import {
 	type UserRequestNonConfirmedError,
 	type UserRequestNonExistingError
 } from '$lib/shared/domain/__core/user-request';
+import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
 
 type UseCaseInput = Readonly<{
-	otp: UserRequest['otp'];
-	id: UserRequest['id'];
+	otp: UserPlainTextOTP;
+	userId: UserRequest['userId'];
+	userRequestId: UserRequest['id'];
 }>;
 
 type UseCaseResult = Result<
@@ -30,20 +32,22 @@ type UseCaseResult = Result<
 export class ConfirmPasswordResetRequestUseCase {
 	constructor(
 		private userRequestRepository: UserRequestRepository,
-		private validateUserRequestUseCase: ValidateUserRequestUseCase
+		private isUserRequestCorrectUseCase: IsUserRequestCorrectUseCase,
+		private hasher: PasswordHasher
 	) {}
 	async execute(input: UseCaseInput): Promise<UseCaseResult> {
 		try {
-			const validationResult = await this.validateUserRequestUseCase.execute(input);
+			const validationResult = await this.isUserRequestCorrectUseCase.execute(input);
 			if (validationResult.isErr()) {
 				return err(validationResult.error);
 			}
 
-			if (validationResult.value.otp !== input.otp) {
-				return err(new UserRequestInvalidCodeError(input.id, input.otp));
+			const isCorrect = await this.hasher.verify(validationResult.value.hashedOTP, input.otp);
+			if (isCorrect) {
+				return err(new UserRequestInvalidCodeError(input.userRequestId));
 			}
 
-			const result = await this.userRequestRepository.confirm(input.id);
+			const result = await this.userRequestRepository.confirm(input.userId, input.userRequestId);
 
 			// TODO: implement notification through 'communication channel -> email'
 			// await this.sendEmailWithConfirmation.execute(user.email);

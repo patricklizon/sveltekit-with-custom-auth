@@ -1,7 +1,7 @@
 import { resolveRoute } from '$app/paths';
 import { UnexpectedErrorType } from '$lib/errors';
 import { RawPath } from '$lib/routes';
-import { TwoFactor } from '$lib/server/infrastructure/__core/security';
+import { PasswordHasher, TwoFactor } from '$lib/server/infrastructure/__core/security';
 import { UserRepository } from '$lib/server/modules/__core/user';
 import { UserRequestRepository } from '$lib/server/modules/__core/user-request';
 import { CreatePasswordResetRequestUseCase } from '$lib/server/modules/__core/user/use-cases/create-password-reset-request';
@@ -12,8 +12,9 @@ import type { FormFail, FormParseFail } from '$lib/types';
 import { fail, error, redirect, type Actions } from '@sveltejs/kit';
 
 const twoFactor = new TwoFactor();
-const userRepository = new UserRepository();
-const userRequestRepository = new UserRequestRepository();
+const hasher = new PasswordHasher();
+const userRepository = new UserRepository(hasher);
+const userRequestRepository = new UserRequestRepository(hasher);
 const createPasswordResetRequest = new CreatePasswordResetRequestUseCase(
 	userRepository,
 	userRequestRepository,

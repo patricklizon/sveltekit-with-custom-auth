@@ -64,7 +64,7 @@ function readApplicationUrlStrategy(
 	if (!value) return ok(undefined);
 
 	const decoded = decodeURI(normalizeAbsoluteUrlPath(value));
-	const prefix = SerializationPrefix.AppHref;
+	const prefix = SerializationPrefix.AppRoute;
 	if (!decoded.startsWith(prefix)) {
 		return err(new UrlSearchParamDeserializationError(prefix, paramName, ''));
 	}

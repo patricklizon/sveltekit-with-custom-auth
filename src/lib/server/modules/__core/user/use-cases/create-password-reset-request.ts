@@ -31,7 +31,6 @@ export class CreatePasswordResetRequestUseCase {
 
 			const requestId = await this.userRequestRepository.save({
 				otp: this.twoFactor.generateOTP(),
-				expiresAt: new Date(Date.now() + 1000 * 60 * 10),
 				userId: user.id,
 				type: 'password_reset'
 			});

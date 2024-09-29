@@ -34,7 +34,7 @@ export const SerializationPrefix = {
 	String: `string${sep}`,
 	Number: `number${sep}`,
 	Boolean: `boolean${sep}`,
-	AppHref: `appHref${sep}`
+	AppRoute: `appRoute${sep}`
 } as const;
 
 export type SerializationPrefix = Enum<typeof SerializationPrefix>;

@@ -14,6 +14,7 @@ import type {
 	PasswordHasher,
 	CookieSessionManager
 } from '$lib/server/infrastructure/__core/security';
+import { UnexpectedError } from '$lib/errors';
 
 type UseCaseContext = {
 	cookies: Cookies;
@@ -28,7 +29,7 @@ type UseCaseInput = Readonly<{
 
 type UseCaseResult = ResultAsync<
 	Readonly<User>,
-	UserInvalidPasswordError | UserDoesNotExistsError | UserCorruptionError
+	UserInvalidPasswordError | UserDoesNotExistsError | UserCorruptionError | UnexpectedError
 >;
 
 export class LoginWithCredentialsUseCase {
@@ -39,34 +40,38 @@ export class LoginWithCredentialsUseCase {
 	) {}
 
 	async execute(ctx: UseCaseContext, input: UseCaseInput): Promise<UseCaseResult> {
-		const user = await this.userRepository.findByEmail(input.email);
-		if (!user) {
-			await this.simulatePasswordVerification();
-			return err(new UserDoesNotExistsError(input.email));
+		try {
+			const user = await this.userRepository.findByEmail(input.email);
+			if (!user) {
+				await this.simulatePasswordVerification();
+				return err(new UserDoesNotExistsError(input.email));
+			}
+
+			const password = await this.userRepository.findUserPasswordById(user.id);
+			if (!password) {
+				await this.simulatePasswordVerification();
+				return err(
+					new UserCorruptionError('User found but password not found', { email: user.email })
+				);
+			}
+
+			const isPasswordValid = await this.hasher.verify(password.hashedPassword, input.password);
+			if (!isPasswordValid) {
+				// TODO: add record to DB that stores number of attempts
+				// or should it be done with rate limiter?
+				// - update user's event log -> ip, userAgent
+				// - send email notification
+
+				return err(new UserInvalidPasswordError());
+			}
+
+			await this.cookieSessionManager.create(ctx.cookies, user.id);
+			// TODO: user log -> ip, userAgent
+
+			return ok(user);
+		} catch (error) {
+			return err(new UnexpectedError(error));
 		}
-
-		const password = await this.userRepository.findUserPasswordById(user.id);
-		if (!password) {
-			await this.simulatePasswordVerification();
-			return err(
-				new UserCorruptionError('User found but password not found', { email: user.email })
-			);
-		}
-
-		const isPasswordValid = await this.hasher.verify(password.hashedPassword, input.password);
-		if (!isPasswordValid) {
-			// TODO: add record to DB that stores number of attempts
-			// or should it be done with rate limiter?
-			// - update user's event log -> ip, userAgent
-			// - send email notification
-
-			return err(new UserInvalidPasswordError());
-		}
-
-		await this.cookieSessionManager.create(ctx.cookies, user.id);
-		// TODO: user log -> ip, userAgent
-
-		return ok(user);
 	}
 
 	/**

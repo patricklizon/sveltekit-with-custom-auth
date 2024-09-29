@@ -7,15 +7,25 @@ import {
 } from '$lib/server/infrastructure/persistance';
 import { and, eq } from 'drizzle-orm';
 import type { UserRequest, UserRequestSaveDTO } from '$lib/shared/domain/__core/user-request';
+import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
 
 export class UserRequestRepository {
-	constructor(private db = database) {}
+	constructor(
+		private hasher: PasswordHasher,
+		private db = database
+	) {}
 
-	async save(data: Readonly<UserRequestSaveDTO>): Promise<UserRequest['id']> {
+	async save({ otp, type, userId }: Readonly<UserRequestSaveDTO>): Promise<UserRequest['id']> {
 		try {
 			const [result] = await this.db
 				.insert(userRequests)
-				.values(data)
+				.values({
+					// TODO: use libary for calculation i.e. add(now, minutesToMs(...))
+					expiresAt: new Date(Date.now() + 1000 * 60 * 10),
+					hashedOTP: await this.hasher.hash(otp),
+					type,
+					userId
+				})
 				.returning({ id: userRequests.id });
 
 			if (!result) throw new DatabaseReadError('Creating request did not return any value');
@@ -26,12 +36,15 @@ export class UserRequestRepository {
 		}
 	}
 
-	async findById(id: UserRequest['id']): Promise<Option<UserRequest>> {
+	async findById(
+		userId: UserRequest['userId'],
+		requestId: UserRequest['id']
+	): Promise<Option<UserRequest>> {
 		try {
 			const [result] = await this.db
 				.select()
 				.from(userRequests)
-				.where(eq(userRequests.id, id))
+				.where(and(eq(userRequests.id, requestId), eq(userRequests.userId, userId)))
 				.limit(1);
 
 			return result;
@@ -40,27 +53,29 @@ export class UserRequestRepository {
 		}
 	}
 
-	async findAllByUserId(id: UserRequest['userId']): Promise<UserRequest[]> {
+	async findAllByUserId(userId: UserRequest['userId']): Promise<UserRequest['id'][]> {
 		try {
-			const result = await this.db.select().from(userRequests).where(eq(userRequests.userId, id));
+			const result = await this.db
+				.select({ id: userRequests.id })
+				.from(userRequests)
+				.where(eq(userRequests.userId, userId));
 
-			return result;
+			return result.map((v) => v.id);
 		} catch (error) {
 			throw new DatabaseReadError(error);
 		}
 	}
 
-	async confirm(id: UserRequest['id']): Promise<UserRequest> {
+	async confirm(userId: UserRequest['userId'], requestId: UserRequest['id']): Promise<UserRequest> {
 		try {
-			const now = Date.now();
+			const now = new Date(Date.now());
 			const [result] = await this.db
 				.update(userRequests)
 				.set({
-					// TODO: use library for date formatting and calculation
-					expiresAt: new Date(now + 1000 * 60 * 10),
-					confirmedAt: new Date(now)
+					expiresAt: now,
+					confirmedAt: now
 				})
-				.where(eq(userRequests.id, id))
+				.where(and(eq(userRequests.id, requestId), eq(userRequests.userId, userId)))
 				.returning();
 
 			if (!result) throw new DatabaseWriteError('Inserting did not return any value');

@@ -1,8 +1,11 @@
 - [ ] Enable stric linter,
+- [ ] Use transactions,
 - [ ] Implement rate limiter,
 - [ ] Encrypt database,
 - [ ] CRON job for removing expired sessions based on expiratoin time and last time password was changed,
+- [x] User requests backend,
 - [ ] password chagne + invalidate sessions,
 - [ ] email change + invalidate tokens
 - [ ] user account changes log table
 - [ ] alerts for suspicious activities based on account changes log table
+- [x] add 'authenticatedUserId: locals.user?.id' to request

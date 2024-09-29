@@ -5,10 +5,11 @@ import type {
 	UserRequestExpiredError,
 	UserRequestNonExistingError
 } from '$lib/shared/domain/__core/user-request';
-import type { ValidateUserRequestUseCase } from '$lib/server/modules/__core/user-request';
+import type { IsUserRequestCorrectUseCase } from '$lib/server/modules/__core/user-request';
 
 type UseCaseInput = Readonly<{
-	id: UserRequest['id'];
+	userId: UserRequest['userId'];
+	userRequestId: UserRequest['id'];
 }>;
 
 type UseCaseResult = Result<
@@ -22,11 +23,11 @@ type UseCaseResult = Result<
  * This use case checks if a password reset request exists and is not expired.
  */
 export class IsAllowedToStartPasswordResetProcessUseCase {
-	constructor(private validateUserRequestUseCase: ValidateUserRequestUseCase) {}
+	constructor(private isUserRequestCorrectUseCase: IsUserRequestCorrectUseCase) {}
 
 	async execute(input: UseCaseInput): Promise<UseCaseResult> {
 		try {
-			return await this.validateUserRequestUseCase.execute(input);
+			return await this.isUserRequestCorrectUseCase.execute(input);
 		} catch (error) {
 			return err(new UnexpectedError(error));
 		}

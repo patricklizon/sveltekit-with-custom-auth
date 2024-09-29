@@ -8,19 +8,25 @@ import { safeCastId } from '$lib/shared/domain/__core/id';
 import type { LayoutServerLoad } from './$types';
 import {
 	UserRequestRepository,
-	ValidateUserRequestUseCase
+	IsUserRequestCorrectUseCase
 } from '$lib/server/modules/__core/user-request';
 import { UserRequestErrorType, type UserRequest } from '$lib/shared/domain/__core/user-request';
+import { PasswordHasher } from '$lib/server/infrastructure/__core/security';
 
-const userRequestRepository = new UserRequestRepository();
-const validateUserRequestUseCase = new ValidateUserRequestUseCase(userRequestRepository);
+const hasher = new PasswordHasher();
+const userRequestRepository = new UserRequestRepository(hasher);
+const validateUserRequestUseCase = new IsUserRequestCorrectUseCase(userRequestRepository);
 const isAllowedToFinishPasswordResetProcess = new IsAllowedToFinishPasswordResetProcessUseCase(
 	validateUserRequestUseCase
 );
 
 export const load: LayoutServerLoad = async ({ params, locals }) => {
-	const id: UserRequest['id'] = safeCastId(params.password_reset_request_id);
-	const canFinishProcessResult = await isAllowedToFinishPasswordResetProcess.execute({ id });
+	const userRequestId: UserRequest['id'] = safeCastId(params.password_reset_request_id);
+	const canFinishProcessResult = await isAllowedToFinishPasswordResetProcess.execute({
+		// TODO: fix
+		userId: locals.user?.id,
+		userRequestId
+	});
 
 	if (canFinishProcessResult.isErr()) {
 		switch (canFinishProcessResult.error.type) {
@@ -33,7 +39,7 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 			case UserRequestErrorType.NonConfirmed: {
 				throw redirect(
 					302,
-					resolveRoute(RawPath.ResetPasswordVerify, { password_reset_request_id: id })
+					resolveRoute(RawPath.ResetPasswordVerify, { password_reset_request_id: userRequestId })
 				);
 			}
 			case UnexpectedErrorType: {
@@ -45,6 +51,6 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 	return {
 		session: locals.session,
 		user: locals.user,
-		passwordResetRequestId: id
+		passwordResetRequestId: userRequestId
 	};
 };

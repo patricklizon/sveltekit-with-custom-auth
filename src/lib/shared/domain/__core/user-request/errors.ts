@@ -16,7 +16,8 @@ export const UserRequestErrorType = {
 	Expired: 'domain/user-request/error/Expired',
 	NonConfirmed: 'domain/user-request/error/NonConfirmed',
 	NonExisting: 'domain/user-request/error/NonExisting',
-	InvalidVerificationCode: 'domain/user-request/error/InvalidVerificationCode'
+	InvalidVerificationCode: 'domain/user-request/error/InvalidVerificationCode',
+	UnauthorizedAccess: 'domain/user-request/error/UnauthorizedAccess'
 } as const;
 
 export type UserRequestErrorType = Enum<typeof UserRequestErrorType>;
@@ -37,21 +38,21 @@ export class UserRequestExpiredError extends DomainError<
 
 export class UserRequestNonExistingError extends DomainError<
 	typeof UserRequestErrorType.NonExisting,
-	{ passwordResetRequestId: UserRequest['id'] }
+	{ userRequestId: UserRequest['id'] }
 > {
-	constructor(passwordResetRequestId: UserRequest['id']) {
-		super(UserRequestErrorType.NonExisting, { passwordResetRequestId });
+	constructor(userRequestId: UserRequest['id']) {
+		super(UserRequestErrorType.NonExisting, { userRequestId });
 	}
 }
 
 export class UserRequestInvalidCodeError extends DomainError<
 	typeof UserRequestErrorType.InvalidVerificationCode,
-	{ passwordResetRequestId: UserRequest['id']; otp: UserRequest['otp'] }
+	{ userRequestId: UserRequest['id'] }
 > {
-	constructor(passwordResetRequestId: UserRequest['id'], otp: UserRequest['otp']) {
+	constructor(userRequestId: UserRequest['id']) {
 		super(
 			UserRequestErrorType.InvalidVerificationCode,
-			{ passwordResetRequestId, otp },
+			{ userRequestId },
 			`Entered code is invalid`
 		);
 	}
@@ -59,12 +60,12 @@ export class UserRequestInvalidCodeError extends DomainError<
 
 export class UserRequestNonConfirmedError extends DomainError<
 	typeof UserRequestErrorType.NonConfirmed,
-	{ passwordResetRequestId: UserRequest['id'] }
+	{ userRequestId: UserRequest['id'] }
 > {
-	constructor(passwordResetRequestId: UserRequest['id']) {
+	constructor(userRequestId: UserRequest['id']) {
 		super(
 			UserRequestErrorType.NonConfirmed,
-			{ passwordResetRequestId },
+			{ userRequestId },
 			'Password change request was not verified.'
 		);
 	}

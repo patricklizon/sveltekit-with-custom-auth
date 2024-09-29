@@ -3,7 +3,7 @@ import type { RouteId as Login } from '../routes/(__core)/login/$types';
 import type { RouteId as Logout } from '../routes/(protected)/(__core)/logout/$types';
 import type { RouteId as Register } from '../routes/(__core)/register/$types';
 import type { RouteId as Home } from '../routes/(protected)/home/$types';
-import type { RouteId as RegisterFinalize } from '../routes/(__core)/register/finalize/$types';
+import type { RouteId as ConfirmUserRequest } from '../routes/(protected)/(__core)/confirm-user-request/[user_request_id]/$types';
 import type { RouteId as ResetPassword } from '../routes/(__core)/reset-password/$types';
 import type { RouteId as ResetPasswordVerify } from '../routes/(__core)/reset-password/[password_reset_request_id]/$types';
 import type { RouteId as ResetPasswordSetNewPassword } from '../routes/(__core)/reset-password/[password_reset_request_id]/set-new-password/$types';
@@ -18,7 +18,7 @@ type RawPathDict = {
 	Login: Login;
 	Logout: Logout;
 	Register: Register;
-	RegisterFinalize: RegisterFinalize;
+	ConfirmUserRequest: ConfirmUserRequest;
 	ResetPassword: ResetPassword;
 	ResetPasswordVerify: ResetPasswordVerify;
 	ResetPasswordSetNewPassword: ResetPasswordSetNewPassword;
@@ -33,7 +33,7 @@ export const RawPath = {
 	Login: '/(__core)/login',
 	Logout: '/(protected)/(__core)/logout',
 	Register: '/(__core)/register',
-	RegisterFinalize: '/(__core)/register/finalize',
+	ConfirmUserRequest: '/(protected)/(__core)/confirm-user-request/[user_request_id]',
 	ResetPassword: '/(__core)/reset-password',
 	ResetPasswordVerify: '/(__core)/reset-password/[password_reset_request_id]',
 	ResetPasswordSetNewPassword:

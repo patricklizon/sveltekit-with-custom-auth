@@ -22,8 +22,10 @@ export type UserPasswordsDBSelectModel = typeof userPasswords.$inferSelect;
 export type UserPasswordsDBInsertModel = typeof userPasswords.$inferInsert;
 
 export type UserPlainTextPassword = Id<'user-plain-text-password'>;
-
 export type UserHashedPassword = Id<'user-hashed-password'>;
+
+export type UserPlainTextOTP = Id<'user-plain-text-otp'>;
+export type UserHashedOTP = Id<'user-hashed-otp'>;
 
 export type UserCredentials = Pick<UserPasswordsDBSelectModel, 'hashedPassword'>;
 

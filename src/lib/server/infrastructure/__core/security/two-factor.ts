@@ -1,10 +1,12 @@
+import { safeCastId } from '$lib/shared/domain/__core/id';
+import type { UserPlainTextOTP } from '$lib/shared/domain/__core/user';
 import { base32 } from 'oslo/encoding';
 
 export class TwoFactor {
-	generateOTP(): string {
+	generateOTP(): UserPlainTextOTP {
 		const bytes = new Uint8Array(5);
 		crypto.getRandomValues(bytes);
-		return base32.encode(bytes);
+		return safeCastId(base32.encode(bytes));
 	}
 
 	generateRecoveryCode(): string {

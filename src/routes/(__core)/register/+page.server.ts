@@ -6,32 +6,56 @@ import {
 	RegisterWithCredentialsUseCase,
 	LoginWithCredentialsUseCase
 } from '$lib/server/modules/__core/user';
-import { PasswordHasher, CookieSessionManager } from '$lib/server/infrastructure/__core/security';
+import {
+	PasswordHasher,
+	CookieSessionManager,
+	TwoFactor
+} from '$lib/server/infrastructure/__core/security';
 import { resolveRoute } from '$app/paths';
 import { RawPath } from '$lib/routes';
 import type { FormFail, FormParseFail } from '$lib/types';
 import { userRegistrationWithCredentialsFormDataSchema } from '$lib/shared/validators/__core/register';
+import { UnexpectedErrorType } from '$lib/errors';
+import {
+	CreateUserRequestUseCase,
+	SendEmailUserRequestConfirmationCodeUseCase,
+	UserRequestRepository,
+	UserRequestType
+} from '$lib/server/modules/__core/user-request';
 import { EmailService } from '$lib/server/infrastructure/__core/email';
+import { UserRequestErrorType } from '$lib/shared/domain/__core/user-request';
+import { EmailErrorType } from '$lib/shared/domain/__core/email/errors';
+import { SetRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
 
-// TODO: add dependency injection
-const userRepository = new UserRepository();
 const hasher = new PasswordHasher();
+const userRepository = new UserRepository(hasher);
 const cookieSessionManager = new CookieSessionManager();
+const userRequestRepository = new UserRequestRepository(hasher);
+const twoFactor = new TwoFactor();
 const emailService = new EmailService();
-const registerWithCredentialsUseCase = new RegisterWithCredentialsUseCase(
-	userRepository,
-	hasher,
-	emailService
+const sendEmailUseCase = new SendEmailUserRequestConfirmationCodeUseCase(
+	emailService,
+	userRequestRepository,
+	userRepository
 );
+const createUserRequestUseCase = new CreateUserRequestUseCase(
+	userRepository,
+	userRequestRepository,
+	twoFactor,
+	sendEmailUseCase
+);
+const registerWithCredentialsUseCase = new RegisterWithCredentialsUseCase(userRepository);
 const loginWithCredentialsUseCase = new LoginWithCredentialsUseCase(
 	userRepository,
 	hasher,
 	cookieSessionManager
 );
 
+const setRedirectSearchParam = new SetRedirectSearchParamUseCase();
+
 export const actions: Actions = {
-	default: async (event) => {
-		const formData = Object.fromEntries(await event.request.formData());
+	default: async ({ request, cookies, url, getClientAddress }) => {
+		const formData = Object.fromEntries(await request.formData());
 		const formDataParseResult =
 			await userRegistrationWithCredentialsFormDataSchema.safeParseAsync(formData);
 
@@ -58,19 +82,17 @@ export const actions: Actions = {
 						errorType: registrationResult.error.type
 					} satisfies FormFail);
 				}
-				// TODO: improve error handling
-				case 'unexpected': {
-					console.error(registrationResult.error);
-					throw error(500, { message: 'An unexpected error occurred' });
+				case UnexpectedErrorType: {
+					throw error(500, registrationResult.error);
 				}
 			}
 		}
 
 		const loginResult = await loginWithCredentialsUseCase.execute(
 			{
-				cookies: event.cookies,
-				ip: event.getClientAddress(),
-				userAgent: event.request.headers.get('user-agent') ?? 'Unknown'
+				cookies,
+				ip: getClientAddress(),
+				userAgent: request.headers.get('user-agent') ?? 'Unknown'
 			},
 			{
 				email: parsedData.email,
@@ -78,12 +100,42 @@ export const actions: Actions = {
 			}
 		);
 
-		// TODO: handle
 		if (loginResult.isErr()) {
-			console.error('Login failed after successful registration:', loginResult.error);
-			// TODO: log error, logout and redirect to error page with `throw error()`
+			switch (loginResult.error.type) {
+				case UserErrorType.NonExisting:
+				case UserErrorType.DataCorruption:
+				case UserErrorType.InvalidPassword:
+				case UnexpectedErrorType: {
+					return error(500, loginResult.error);
+				}
+			}
 		}
 
-		throw redirect(302, resolveRoute(RawPath.Home, {}));
+		const userRequest = await createUserRequestUseCase.execute({
+			userId: loginResult.value.id,
+			type: UserRequestType.ConfirmEmail
+		});
+
+		if (userRequest.isErr()) {
+			switch (userRequest.error.type) {
+				case EmailErrorType.Rejected:
+				case UserRequestErrorType.NonExisting:
+				case UserErrorType.NonExisting:
+				case UnexpectedErrorType: {
+					return error(500, userRequest.error);
+				}
+			}
+		}
+
+		const nextRoute = resolveRoute(RawPath.ConfirmUserRequest, {
+			user_request_id: userRequest.value
+		});
+		const redirectRoute = resolveRoute(RawPath.Home, {});
+		const nextUrlResult = setRedirectSearchParam.execute({
+			url: new URL(nextRoute, url),
+			paramValue: redirectRoute
+		});
+
+		throw redirect(302, nextUrlResult);
 	}
 };

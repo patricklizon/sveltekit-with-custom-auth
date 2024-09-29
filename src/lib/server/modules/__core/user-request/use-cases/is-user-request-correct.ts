@@ -9,7 +9,8 @@ import { UnexpectedError } from '$lib/errors';
 import type { UserRequestRepository } from '$lib/server/modules/__core/user-request';
 
 type UseCaseInput = Readonly<{
-	id: UserRequest['id'];
+	userId: UserRequest['userId'];
+	userRequestId: UserRequest['id'];
 }>;
 
 type UseCaseResult = Result<
@@ -17,14 +18,17 @@ type UseCaseResult = Result<
 	UserRequestNonExistingError | UserRequestExpiredError | UnexpectedError
 >;
 
-export class ValidateUserRequestUseCase {
+export class IsUserRequestCorrectUseCase {
 	constructor(private userRequestRepository: UserRequestRepository) {}
 
 	async execute(input: UseCaseInput): Promise<UseCaseResult> {
 		try {
-			const userRequest = await this.userRequestRepository.findById(input.id);
+			const userRequest = await this.userRequestRepository.findById(
+				input.userId,
+				input.userRequestId
+			);
 			if (!userRequest) {
-				return err(new UserRequestNonExistingError(input.id));
+				return err(new UserRequestNonExistingError(input.userRequestId));
 			}
 
 			const isExpired = userRequest.expiresAt.getTime() <= Date.now();

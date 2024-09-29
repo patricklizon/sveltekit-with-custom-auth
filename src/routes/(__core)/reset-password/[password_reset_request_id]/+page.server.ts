@@ -1,9 +1,10 @@
 import { resolveRoute } from '$app/paths';
 import { UnexpectedErrorType } from '$lib/errors';
 import { RawPath } from '$lib/routes';
+import { PasswordHasher } from '$lib/server/infrastructure/__core/security';
 import {
 	UserRequestRepository,
-	ValidateUserRequestUseCase
+	IsUserRequestCorrectUseCase
 } from '$lib/server/modules/__core/user-request';
 import { ConfirmPasswordResetRequestUseCase } from '$lib/server/modules/__core/user/use-cases/confirm-password-reset-request';
 import { UserErrorType } from '$lib/shared/domain/__core/user';
@@ -12,15 +13,17 @@ import { resetPasswordConfirmRequestFormDataSchema } from '$lib/shared/validator
 import type { FormFail, FormParseFail } from '$lib/types';
 import { error, fail, redirect, type Actions } from '@sveltejs/kit';
 
-const userRequestRepository = new UserRequestRepository();
-const validateUserRequestUseCase = new ValidateUserRequestUseCase(userRequestRepository);
+const hasher = new PasswordHasher();
+const userRequestRepository = new UserRequestRepository(hasher);
+const validateUserRequestUseCase = new IsUserRequestCorrectUseCase(userRequestRepository);
 const confirmPasswordResetRequest = new ConfirmPasswordResetRequestUseCase(
 	userRequestRepository,
-	validateUserRequestUseCase
+	validateUserRequestUseCase,
+	hasher
 );
 
 export const actions: Actions = {
-	default: async ({ request }) => {
+	default: async ({ request, locals }) => {
 		const formData = Object.fromEntries(await request.formData());
 		const formDataParseResult =
 			await resetPasswordConfirmRequestFormDataSchema.safeParseAsync(formData);
@@ -34,10 +37,12 @@ export const actions: Actions = {
 			} satisfies FormParseFail);
 		}
 
-		const { otp, passwordResetRequestId: id } = formDataParseResult.data;
+		const { otp, passwordResetRequestId: userRequestId } = formDataParseResult.data;
 		const confirmResult = await confirmPasswordResetRequest.execute({
-			otp,
-			id
+			// TODO: fix
+			userId: locals.user?.id,
+			userRequestId,
+			otp
 		});
 
 		if (confirmResult.isErr()) {

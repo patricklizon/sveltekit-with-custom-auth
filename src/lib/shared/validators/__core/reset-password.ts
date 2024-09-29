@@ -2,6 +2,7 @@ import { safeCastId } from '$lib/shared/domain/__core/id';
 import type { UserRequestId } from '$lib/shared/domain/__core/user-request';
 import { z } from 'zod';
 import { confirmPasswordSchema, userEmailSchema } from './units/auth';
+import type { UserPlainTextOTP } from '$lib/shared/domain/__core/user';
 
 /**
  * Schema for form initializing password reset process
@@ -14,7 +15,10 @@ export const resetPasswordStartProcessFormDataSchema = z.object({
  * Schema for form confirming user request
  */
 export const resetPasswordConfirmRequestFormDataSchema = z.object({
-	otp: z.string().min(1),
+	otp: z
+		.string()
+		.min(1)
+		.transform((v) => safeCastId<UserPlainTextOTP, string>(v)),
 	passwordResetRequestId: z
 		.string()
 		.min(1)

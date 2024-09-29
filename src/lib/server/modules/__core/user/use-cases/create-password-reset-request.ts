@@ -27,7 +27,7 @@ export class CreatePasswordResetRequestUseCase {
 			}
 
 			// TODO: extract 'password_reset' to enum
-			await this.userRequestRepository.deleteAllByUserId('password_reset', user.id);
+			await this.userRequestRepository.deleteAllOfTypeByUserId('password_reset', user.id);
 
 			const requestId = await this.userRequestRepository.save({
 				otp: this.twoFactor.generateOTP(),

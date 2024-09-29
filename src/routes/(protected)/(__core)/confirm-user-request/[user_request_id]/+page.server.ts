@@ -74,10 +74,7 @@ export const actions: Actions = {
 				return;
 			}
 			case UserRequestType.ConfirmEmail: {
-				await userRepository.update(confirmResult.value.userId, {
-					emailVerified: true
-				});
-				break;
+				await userRepository.setEmailAsVerified(confirmResult.value.userId);
 			}
 		}
 

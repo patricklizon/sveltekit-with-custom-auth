@@ -7,6 +7,7 @@ import { resolveRoute } from '$app/paths';
 import { RawPath } from '$lib/routes';
 import type { FormFail, FormParseFail } from '$lib/types';
 import { loginWithCredentialsFormDataSchema } from '$lib/shared/validators/__core/login';
+import { UnexpectedErrorType } from '$lib/errors';
 
 const cookieSessionManager = new CookieSessionManager();
 const hasher = new PasswordHasher();
@@ -66,16 +67,18 @@ export const actions: Actions = {
 					} satisfies FormFail<typeof loginResult.error.data>);
 				}
 
-				case UserErrorType.DataCorruption: {
+				case UserErrorType.DataCorruption:
+				case UnexpectedErrorType: {
 					// TODO: log error to logger (tbd. pnp wrapper for sentry, better stack)
 					// TODO: better message
+					console.log(loginResult.error);
 					throw error(500, loginResult.error);
 				}
 			}
 		}
 
-		const fallbackRoute = resolveRoute(RawPath.Register, {});
-		const currentURL = new URL(event.request.url);
+		const fallbackRoute = resolveRoute(RawPath.Home, {});
+		const currentURL = new URL(event.url);
 		const redirectRoute =
 			readRedirectSearchParam.execute(currentURL).mapErr(console.error).unwrapOr(fallbackRoute) ??
 			fallbackRoute;

@@ -14,10 +14,9 @@ import type { UserRequest } from './type';
 
 export const UserRequestErrorType = {
 	Expired: 'domain/user-request/error/Expired',
-	NonConfirmed: 'domain/user-request/error/NonConfirmed',
+	NotConfirmed: 'domain/user-request/error/NotConfirmed',
 	NonExisting: 'domain/user-request/error/NonExisting',
-	InvalidVerificationCode: 'domain/user-request/error/InvalidVerificationCode',
-	UnauthorizedAccess: 'domain/user-request/error/UnauthorizedAccess'
+	InvalidVerificationCode: 'domain/user-request/error/InvalidVerificationCode'
 } as const;
 
 export type UserRequestErrorType = Enum<typeof UserRequestErrorType>;
@@ -59,12 +58,12 @@ export class UserRequestInvalidCodeError extends DomainError<
 }
 
 export class UserRequestNonConfirmedError extends DomainError<
-	typeof UserRequestErrorType.NonConfirmed,
+	typeof UserRequestErrorType.NotConfirmed,
 	{ userRequestId: UserRequest['id'] }
 > {
 	constructor(userRequestId: UserRequest['id']) {
 		super(
-			UserRequestErrorType.NonConfirmed,
+			UserRequestErrorType.NotConfirmed,
 			{ userRequestId },
 			'Password change request was not verified.'
 		);

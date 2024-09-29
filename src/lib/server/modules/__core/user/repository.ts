@@ -3,7 +3,6 @@ import type {
 	User,
 	UserPasswordsDBSelectModel,
 	UserDBSelectModel,
-	UserUpdateDTO,
 	UserHashedPassword,
 	UserRegisterDTO,
 	UserPlainTextPassword
@@ -103,11 +102,11 @@ export class UserRepository {
 		}
 	}
 
-	async update(id: User['id'], updateData: Partial<UserUpdateDTO>): Promise<UserDBSelectModel> {
+	async setEmailAsVerified(id: User['id']): Promise<UserDBSelectModel> {
 		try {
 			const [result] = await this.db
 				.update(users)
-				.set(updateData)
+				.set({ emailVerified: true })
 				.where(eq(users.id, id))
 				.returning();
 

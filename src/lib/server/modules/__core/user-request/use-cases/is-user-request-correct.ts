@@ -31,6 +31,11 @@ export class IsUserRequestCorrectUseCase {
 				return err(new UserRequestNonExistingError(input.userRequestId));
 			}
 
+			const confirmedAt = userRequest.confirmedAt;
+			if (confirmedAt) {
+				return err(new UserRequestExpiredError(confirmedAt));
+			}
+
 			const isExpired = userRequest.expiresAt.getTime() <= Date.now();
 			if (isExpired) {
 				return err(new UserRequestExpiredError(userRequest.expiresAt));

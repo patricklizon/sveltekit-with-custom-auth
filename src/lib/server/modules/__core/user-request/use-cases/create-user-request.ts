@@ -2,10 +2,7 @@ import { UserDoesNotExistsError, type User } from '$lib/shared/domain/__core/use
 import { err, ok, ResultAsync } from 'neverthrow';
 import { UnexpectedError } from '$lib/errors';
 import { TwoFactor } from '$lib/server/infrastructure/__core/security';
-import type {
-	UserRequest,
-	UserRequestNonExistingError
-} from '$lib/shared/domain/__core/user-request';
+import type { UserRequest } from '$lib/shared/domain/__core/user-request';
 import type {
 	SendEmailUserRequestConfirmationCodeUseCase,
 	UserRequestRepository,
@@ -21,7 +18,7 @@ type UseCaseInput = Readonly<{
 
 type UseCaseResult = ResultAsync<
 	UserRequest['id'],
-	UserDoesNotExistsError | UserRequestNonExistingError | EmailRejectedError | UnexpectedError
+	UserDoesNotExistsError | EmailRejectedError | UnexpectedError
 >;
 
 export class CreateUserRequestUseCase {

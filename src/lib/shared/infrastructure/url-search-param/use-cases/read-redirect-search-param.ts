@@ -6,10 +6,10 @@ type UseCaseInput = URL;
 
 export class ReadRedirectSearchParamUseCase {
 	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-	execute(input: UseCaseInput) {
+	execute(param: UseCaseInput) {
 		return readUrlSearchParam(UrlSearchParamStrategy.ApplicationUrl, {
 			paramName: UrlSearchParamName.Redirect,
-			url: input
+			url: param
 		});
 	}
 }

@@ -67,7 +67,7 @@ export const actions: Actions = {
 					// TODO: improve error's handling ux
 					throw redirect(302, resolveRoute(RawPath.ResetPassword, {}));
 				}
-				case UserRequestErrorType.NonConfirmed: {
+				case UserRequestErrorType.NotConfirmed: {
 					// TODO: improve error's handling ux
 					throw redirect(302, resolveRoute(RawPath.ResetPasswordVerify, {}));
 				}

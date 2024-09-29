@@ -12,8 +12,6 @@ export type UserDBInsertModel = typeof users.$inferInsert;
 
 export type User = Omit<UserDBSelectModel, 'createdAt' | 'updatedAt' | 'deletedAt'>;
 
-export type UserUpdateDTO = Omit<Partial<User>, 'id' | 'twoFactorEnabled'>;
-
 export type UserRegisterDTO = Omit<User, 'id'>;
 
 /* USER PASSWORD */
@@ -26,6 +24,7 @@ export type UserHashedPassword = Id<'user-hashed-password'>;
 
 export type UserPlainTextOTP = Id<'user-plain-text-otp'>;
 export type UserHashedOTP = Id<'user-hashed-otp'>;
+export type UserRecoveryCode = Id<'user-hashed-otp'>;
 
 export type UserCredentials = Pick<UserPasswordsDBSelectModel, 'hashedPassword'>;
 

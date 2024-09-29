@@ -63,8 +63,9 @@ function readApplicationUrlStrategy(
 	const value = ctx.url.searchParams.get(paramName);
 	if (!value) return ok(undefined);
 
-	const decoded = decodeURI(normalizeAbsoluteUrlPath(value));
+	const decoded = decodeURIComponent(normalizeAbsoluteUrlPath(value));
 	const prefix = SerializationPrefix.AppRoute;
+
 	if (!decoded.startsWith(prefix)) {
 		return err(new UrlSearchParamDeserializationError(prefix, paramName, ''));
 	}

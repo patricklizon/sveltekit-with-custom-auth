@@ -18,15 +18,18 @@ export const users = sqliteTable(
 	'user',
 	{
 		id: text('id').notNull().primaryKey().$default(createId).$type<UserId>(),
-		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$default(sqlDefaultCreatedAt),
-		updatedAt: integer('updated_at', { mode: 'timestamp' })
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.notNull()
+			.$default(sqlDefaultCreatedAt),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.$default(sqlDefaultCreatedAt)
 			.$onUpdate(sqlDefaultUpdatedAt),
-		deletedAt: integer('deleted_at', { mode: 'timestamp' }),
+		deletedAt: integer('deleted_at', { mode: 'timestamp_ms' }),
 		email: text('email').notNull().unique(),
 		emailVerified: integer('email_verified', { mode: 'boolean' }).notNull().default(false),
-		twoFactorEnabled: integer('enabled', { mode: 'boolean' }).notNull().default(false),
-		twoFactorVerified: integer('verified', { mode: 'boolean' }).notNull().default(false)
+		twoFactorEnabled: integer('two_factor_enabled', { mode: 'boolean' }).notNull().default(false),
+		twoFactorVerified: integer('two_factor_verified', { mode: 'boolean' }).notNull().default(false)
 	},
 	(table) => ({
 		emailIdx: index('email_idx').on(table.email)
@@ -51,8 +54,12 @@ export const userPasswords = sqliteTable('user_password', {
 		.references(() => users.id)
 		.$type<UserId>(),
 	hashedPassword: text('hashed_password').notNull().$type<UserHashedPassword>(),
-	createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$default(sqlDefaultCreatedAt),
-	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$onUpdate(sqlDefaultUpdatedAt)
+	createdAt: integer('created_at', { mode: 'timestamp_ms' })
+		.notNull()
+		.$default(sqlDefaultCreatedAt),
+	updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+		.notNull()
+		.$onUpdate(sqlDefaultUpdatedAt)
 });
 
 export const usersPasswordsRelations = relations(userPasswords, ({ one }) => ({
@@ -73,8 +80,10 @@ export const userExternalAccounts = sqliteTable(
 		userId: text('user_id')
 			.references(() => users.id)
 			.$type<UserId>(),
-		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$default(sqlDefaultCreatedAt),
-		updatedAt: integer('updated_at', { mode: 'timestamp' })
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.$default(sqlDefaultCreatedAt),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
 			.notNull()
 			.$onUpdate(sqlDefaultUpdatedAt),
 		providerId: text('provider_id').notNull().$type<ExternalAccountProviderId>(),

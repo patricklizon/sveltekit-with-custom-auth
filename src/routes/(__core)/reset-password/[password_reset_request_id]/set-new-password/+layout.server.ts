@@ -36,7 +36,7 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 			case UserRequestErrorType.NonExisting: {
 				throw redirect(302, resolveRoute(RawPath.ResetPassword, {}));
 			}
-			case UserRequestErrorType.NonConfirmed: {
+			case UserRequestErrorType.NotConfirmed: {
 				throw redirect(
 					302,
 					resolveRoute(RawPath.ResetPasswordVerify, { password_reset_request_id: userRequestId })

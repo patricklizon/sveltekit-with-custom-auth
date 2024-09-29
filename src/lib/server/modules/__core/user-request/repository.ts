@@ -5,7 +5,7 @@ import {
 	DatabaseWriteError,
 	userRequests
 } from '$lib/server/infrastructure/persistance';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 import type { UserRequest, UserRequestSaveDTO } from '$lib/shared/domain/__core/user-request';
 import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
 
@@ -86,11 +86,34 @@ export class UserRequestRepository {
 		}
 	}
 
-	async deleteAllByUserId(type: UserRequest['type'], id: UserRequest['userId']): Promise<void> {
+	async deleteAllOfTypeByUserId(
+		type: UserRequest['type'],
+		id: UserRequest['userId']
+	): Promise<void> {
 		try {
 			await this.db
 				.delete(userRequests)
 				.where(and(eq(userRequests.userId, id), eq(userRequests.type, type)));
+		} catch (error) {
+			throw new DatabaseWriteError(error);
+		}
+	}
+
+	async deleteAllOfTypeButOneByUserId(
+		type: UserRequest['type'],
+		requestId: UserRequest['id'],
+		id: UserRequest['userId']
+	): Promise<void> {
+		try {
+			await this.db
+				.delete(userRequests)
+				.where(
+					and(
+						ne(userRequests.id, requestId),
+						eq(userRequests.userId, id),
+						eq(userRequests.type, type)
+					)
+				);
 		} catch (error) {
 			throw new DatabaseWriteError(error);
 		}

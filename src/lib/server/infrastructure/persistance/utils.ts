@@ -1,13 +1,13 @@
-import { SQL, sql } from 'drizzle-orm';
+// import { SQL, sql } from 'drizzle-orm';
 
-export function sqlCurrentTimeStamp(): SQL<Date> {
-	return sql`(current_timestamp)`;
+export function sqlCurrentTimeStamp(): Date {
+	return new Date();
 }
 
-export function sqlDefaultCreatedAt(): SQL<Date> {
+export function sqlDefaultCreatedAt(): Date {
 	return sqlCurrentTimeStamp();
 }
 
-export function sqlDefaultUpdatedAt(): SQL<Date> {
+export function sqlDefaultUpdatedAt(): Date {
 	return sqlCurrentTimeStamp();
 }

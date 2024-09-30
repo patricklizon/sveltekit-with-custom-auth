@@ -8,15 +8,20 @@ export const userEmailSchema = z
 	.email('Invalid email address')
 	.transform((v) => v.toLowerCase());
 
-export const userPasswordSchema = z
+export const loginPasswordSchema = z
+	.string()
+	.min(1)
+	.transform((v) => safeCastId<UserPlainTextPassword, string>(v));
+
+export const registerPasswordSchema = z
 	.string()
 	.min(8, 'Password must be at least 8 characters')
 	.transform((v) => safeCastId<UserPlainTextPassword, string>(v));
 
 export const confirmPasswordSchema = z
 	.object({
-		password: userPasswordSchema,
-		passwordConfirmation: userPasswordSchema
+		password: registerPasswordSchema,
+		passwordConfirmation: registerPasswordSchema
 	})
 	.refine((val) => val.password === val.passwordConfirmation, {
 		message: "Passwords don't match",

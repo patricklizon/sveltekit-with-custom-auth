@@ -18,9 +18,18 @@ type UseCaseResult = Result<
 	UserRequestNonExistingError | UserRequestExpiredError | UnexpectedError
 >;
 
+/**
+ * Use case to check if a user request is correct and valid.
+ *
+ * This use case verifies the existence and validity of a user request.
+ * It checks if the request exists, hasn't been confirmed yet, and hasn't expired.
+ */
 export class IsUserRequestCorrectUseCase {
 	constructor(private userRequestRepository: UserRequestRepository) {}
 
+	/*
+	 * Executes the use case
+	 */
 	async execute(input: UseCaseInput): Promise<UseCaseResult> {
 		try {
 			const userRequest = await this.userRequestRepository.findById(

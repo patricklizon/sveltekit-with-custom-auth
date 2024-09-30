@@ -12,7 +12,7 @@ import type { UnexpectedError } from '$lib/errors';
 
 type UseCaseInput = Readonly<{
 	userId: UserRequest['userId'];
-	requestId: UserRequest['id'];
+	userRequestId: UserRequest['id'];
 	otp: UserPlainTextOTP;
 }>;
 
@@ -21,17 +21,32 @@ type UseCaseResult = Result<
 	UserRequestNonExistingError | UserDoesNotExistsError | EmailRejectedError | UnexpectedError
 >;
 
-export class SendEmailUserRequestConfirmationCodeUseCase {
+/**
+ * Use case for sending an email with a confirmation code for a user request.
+ *
+ * It involves the following steps:
+ *
+ * - Verifies the existence of the user request,
+ * - Retrieves the user's email address,
+ * - Sends an email containing the confirmation code (OTP) to the user
+ */
+export class SendEmailWithConfirmationCodeForUserRequestUseCase {
 	constructor(
 		private emailService: EmailService,
 		private userRequestRepository: UserRequestRepository,
 		private userRepository: UserRepository
 	) {}
 
+	/**
+	 * Executes the use case
+	 */
 	async execute(input: UseCaseInput): Promise<UseCaseResult> {
-		const userRequest = await this.userRequestRepository.findById(input.userId, input.requestId);
+		const userRequest = await this.userRequestRepository.findById(
+			input.userId,
+			input.userRequestId
+		);
 		if (!userRequest) {
-			return err(new UserRequestNonExistingError(input.requestId));
+			return err(new UserRequestNonExistingError(input.userRequestId));
 		}
 
 		const userEmail = await this.userRepository.getUserEmail(input.userId);

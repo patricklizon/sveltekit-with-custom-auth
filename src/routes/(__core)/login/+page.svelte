@@ -1,7 +1,6 @@
 <script lang="ts">
-
 	import { enhance } from '$app/forms';
-	import type {  ActionData, SubmitFunction } from './$types';
+	import type { ActionData, SubmitFunction } from './$types';
 
 	const handleSubmit: SubmitFunction = () => {
 		return ({ update }) => {
@@ -10,7 +9,6 @@
 	};
 
 	export let form: ActionData;
-
 </script>
 
 <svelte:head>
@@ -25,13 +23,17 @@
 		<input id="email" name="email" type="email" required autocomplete="email" />
 
 		{#if form?.errorByFieldName?.email}
-			<p class="error">{form.errorByFieldName?.email}</p>
+			<p class="error">{form.errorByFieldName.email}</p>
 		{/if}
 	</div>
 
 	<div>
 		<label for="password">Password</label>
 		<input id="password" name="password" type="password" required autocomplete="current-password" />
+
+		{#if form?.errorByFieldName?.password}
+			<p class="error">{form.errorByFieldName.password}</p>
+		{/if}
 	</div>
 
 	<button type="submit">Log In</button>

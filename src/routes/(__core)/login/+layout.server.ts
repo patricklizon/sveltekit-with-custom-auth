@@ -7,13 +7,13 @@ import { RawPath } from '$lib/routes';
 
 const readRedirectSearchParam = new ReadRedirectSearchParamUseCase();
 
-export const load: LayoutServerLoad = async (event) => {
-	if (!isValidUserSession(event.locals)) {
+export const load: LayoutServerLoad = async ({ url, locals }) => {
+	if (!isValidUserSession(locals)) {
 		return;
 	}
 
 	const fallbackRoute = resolveRoute(RawPath.Home, {});
-	const currentURL = new URL(event.request.url);
+	const currentURL = new URL(url.href);
 	// TODO: verify and add sentry
 	const redirectRoute =
 		readRedirectSearchParam.execute(currentURL).mapErr(console.error).unwrapOr(fallbackRoute) ??

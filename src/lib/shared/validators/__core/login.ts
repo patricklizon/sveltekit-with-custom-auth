@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { userEmailSchema, userPasswordSchema } from './units/auth';
+import { userEmailSchema, loginPasswordSchema } from './units/auth';
 
 export const loginWithCredentialsFormDataSchema = z.object({
 	email: userEmailSchema,
-	password: userPasswordSchema
+	password: loginPasswordSchema
 });

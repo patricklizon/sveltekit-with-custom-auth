@@ -17,15 +17,15 @@ import type { FormFail, FormParseFail } from '$lib/types';
 import { userRegistrationWithCredentialsFormDataSchema } from '$lib/shared/validators/__core/register';
 import { UnexpectedErrorType } from '$lib/errors';
 import {
+	CreateUserRequestConfirmEmailUseCase,
 	CreateUserRequestUseCase,
-	SendEmailUserRequestConfirmationCodeUseCase,
-	UserRequestRepository,
-	UserRequestType
+	SendEmailWithConfirmationCodeForUserRequestUseCase,
+	UserRequestRepository
 } from '$lib/server/modules/__core/user-request';
 import { EmailService } from '$lib/server/infrastructure/__core/email';
-import { UserRequestErrorType } from '$lib/shared/domain/__core/user-request';
 import { EmailErrorType } from '$lib/shared/domain/__core/email/errors';
 import { SetRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
+import { UserRequestErrorType } from '$lib/shared/domain/__core/user-request';
 
 const hasher = new PasswordHasher();
 const userRepository = new UserRepository(hasher);
@@ -33,16 +33,21 @@ const cookieSessionManager = new CookieSessionManager();
 const userRequestRepository = new UserRequestRepository(hasher);
 const twoFactor = new TwoFactor();
 const emailService = new EmailService();
-const sendEmailUseCase = new SendEmailUserRequestConfirmationCodeUseCase(
-	emailService,
-	userRequestRepository,
-	userRepository
-);
 const createUserRequestUseCase = new CreateUserRequestUseCase(
 	userRepository,
 	userRequestRepository,
+	twoFactor
+);
+const sendEmailUserRequestConfirmationUseCase =
+	new SendEmailWithConfirmationCodeForUserRequestUseCase(
+		emailService,
+		userRequestRepository,
+		userRepository
+	);
+const createUserRequestConfirmEmailUseCase = new CreateUserRequestConfirmEmailUseCase(
 	twoFactor,
-	sendEmailUseCase
+	sendEmailUserRequestConfirmationUseCase,
+	createUserRequestUseCase
 );
 const registerWithCredentialsUseCase = new RegisterWithCredentialsUseCase(userRepository);
 const loginWithCredentialsUseCase = new LoginWithCredentialsUseCase(
@@ -71,6 +76,7 @@ export const actions: Actions = {
 		const parsedData = formDataParseResult.data;
 		const registrationResult = await registerWithCredentialsUseCase.execute(parsedData);
 
+		// TODO: handle
 		if (registrationResult.isErr()) {
 			switch (registrationResult.error.type) {
 				case UserErrorType.AlreadyExists:
@@ -100,6 +106,7 @@ export const actions: Actions = {
 			}
 		);
 
+		// TODO: handle
 		if (loginResult.isErr()) {
 			switch (loginResult.error.type) {
 				case UserErrorType.NonExisting:
@@ -111,24 +118,23 @@ export const actions: Actions = {
 			}
 		}
 
-		const userRequest = await createUserRequestUseCase.execute({
-			userId: loginResult.value.id,
-			type: UserRequestType.ConfirmEmail
+		const confirmEmailResult = await createUserRequestConfirmEmailUseCase.execute({
+			userId: loginResult.value.id
 		});
 
-		if (userRequest.isErr()) {
-			switch (userRequest.error.type) {
+		if (confirmEmailResult.isErr()) {
+			switch (confirmEmailResult.error.type) {
 				case EmailErrorType.Rejected:
-				case UserRequestErrorType.NonExisting:
 				case UserErrorType.NonExisting:
+				case UserRequestErrorType.NonExisting:
 				case UnexpectedErrorType: {
-					return error(500, userRequest.error);
+					return error(500, confirmEmailResult.error);
 				}
 			}
 		}
 
 		const nextRoute = resolveRoute(RawPath.ConfirmUserRequest, {
-			user_request_id: userRequest.value
+			user_request_id: confirmEmailResult.value.userRequestId
 		});
 		const redirectRoute = resolveRoute(RawPath.Home, {});
 		const nextUrlResult = setRedirectSearchParam.execute({

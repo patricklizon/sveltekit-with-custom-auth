@@ -1,60 +1,70 @@
-import { UserDoesNotExistsError, type User } from '$lib/shared/domain/__core/user';
-import { err, ok, ResultAsync } from 'neverthrow';
+import {
+	UserDoesNotExistsError,
+	type User,
+	type UserPlainTextOTP
+} from '$lib/shared/domain/__core/user';
+import { err, ok, Result } from 'neverthrow';
 import { UnexpectedError } from '$lib/errors';
-import { TwoFactor } from '$lib/server/infrastructure/__core/security';
 import type { UserRequest } from '$lib/shared/domain/__core/user-request';
 import type {
-	SendEmailUserRequestConfirmationCodeUseCase,
 	UserRequestRepository,
 	UserRequestType
 } from '$lib/server/modules/__core/user-request';
 import type { UserRepository } from '../../user';
-import type { EmailRejectedError } from '$lib/shared/domain/__core/email/errors';
 
 type UseCaseInput = Readonly<{
+	otp: UserPlainTextOTP;
 	userId: User['id'];
 	type: UserRequestType;
 }>;
 
-type UseCaseResult = ResultAsync<
-	UserRequest['id'],
-	UserDoesNotExistsError | EmailRejectedError | UnexpectedError
+type UseCaseResult = Result<
+	{ userRequestId: UserRequest['id'] },
+	UserDoesNotExistsError | UnexpectedError
 >;
 
+/**
+ * Use case for creating a new user request.
+ *
+ * It involves the following steps:
+ *
+ * - Verifying the user's existence,
+ * - Saving the user request with the generated OTP
+ */
 export class CreateUserRequestUseCase {
 	constructor(
 		private userRepository: UserRepository,
-		private userRequestRepository: UserRequestRepository,
-		private twoFactor: TwoFactor,
-		private sendEmail: SendEmailUserRequestConfirmationCodeUseCase
+		private userRequestRepository: UserRequestRepository
 	) {}
+
+	/**
+	 * Executes the use case
+	 */
 	async execute(input: UseCaseInput): Promise<UseCaseResult> {
 		try {
+			// TODO: make it parot of transaction
 			const user = await this.userRepository.findUserById(input.userId);
-
 			if (!user) {
 				return err(new UserDoesNotExistsError(input.userId));
 			}
 
-			const otp = this.twoFactor.generateOTP();
-
-			const requestId = await this.userRequestRepository.save({
-				otp,
+			// TODO: make it parot of transaction
+			const userRequestId = await this.userRequestRepository.save({
+				otp: input.otp,
 				userId: user.id,
 				type: input.type
 			});
 
-			const sendEmailResult = await this.sendEmail.execute({
-				otp,
-				requestId,
-				userId: input.userId
-			});
-			if (sendEmailResult.isErr()) {
-				return err(sendEmailResult.error);
-			}
+			// TODO: make it parot of transaction
+			await this.userRequestRepository.deleteAllOfTypeButOneByUserId(
+				input.type,
+				userRequestId,
+				user.id
+			);
 
-			return ok(requestId);
+			return ok({ userRequestId });
 		} catch (error) {
+			// TODO: rollback transaction on error
 			return err(new UnexpectedError(error));
 		}
 	}

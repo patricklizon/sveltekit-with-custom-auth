@@ -27,12 +27,23 @@ type UseCaseResult = ResultAsync<
 	| UnexpectedError
 >;
 
+/**
+ * Use case for confirming a user request.
+ *
+ * This class handles the confirmation process of a user request,
+ * including verification of the one-time password (OTP) and updating
+ * the request status.
+ */
 export class ConfirmUserRequestUseCase {
 	constructor(
 		private isUserRequestCorrectUseCase: IsUserRequestCorrectUseCase,
 		private userRequestRepository: UserRequestRepository,
 		private hasher: PasswordHasher
 	) {}
+
+	/**
+	 * Executes the use case
+	 */
 	async execute(input: UseCaseInput): Promise<UseCaseResult> {
 		try {
 			const isRequestCorrectResult = await this.isUserRequestCorrectUseCase.execute(input);

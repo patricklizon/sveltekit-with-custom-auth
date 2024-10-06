@@ -6,7 +6,9 @@ import {
 	type UserRequest
 } from '$lib/shared/domain/__core/user-request';
 import { UnexpectedError } from '$lib/errors';
-import type { UserRequestRepository } from '$lib/server/modules/__core/user-request';
+import { UserRequestRepository } from '$lib/server/modules/__core/user-request';
+import { database } from '$lib/server/infrastructure/persistance';
+import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
 
 type UseCaseInput = Readonly<{
 	userId: UserRequest['userId'];
@@ -25,17 +27,18 @@ type UseCaseResult = Result<
  * It checks if the request exists, hasn't been confirmed yet, and hasn't expired.
  */
 export class IsUserRequestCorrectUseCase {
-	constructor(private userRequestRepository: UserRequestRepository) {}
+	constructor(
+		private hasher: PasswordHasher,
+		private db = database
+	) {}
 
 	/*
 	 * Executes the use case
 	 */
 	async execute(input: UseCaseInput): Promise<UseCaseResult> {
 		try {
-			const userRequest = await this.userRequestRepository.findById(
-				input.userId,
-				input.userRequestId
-			);
+			const userRequestRepository = new UserRequestRepository(this.hasher, this.db);
+			const userRequest = await userRequestRepository.findById(input.userId, input.userRequestId);
 			if (!userRequest) {
 				return err(new UserRequestNonExistingError(input.userRequestId));
 			}

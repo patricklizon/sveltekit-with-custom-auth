@@ -6,18 +6,13 @@ import { IsAllowedToFinishPasswordResetProcessUseCase } from '$lib/server/module
 import { UnexpectedErrorType } from '$lib/errors';
 import { safeCastId } from '$lib/shared/domain/__core/id';
 import type { LayoutServerLoad } from './$types';
-import {
-	UserRequestRepository,
-	IsUserRequestCorrectUseCase
-} from '$lib/server/modules/__core/user-request';
+
 import { UserRequestErrorType, type UserRequest } from '$lib/shared/domain/__core/user-request';
 import { PasswordHasher } from '$lib/server/infrastructure/__core/security';
 
 const hasher = new PasswordHasher();
-const userRequestRepository = new UserRequestRepository(hasher);
-const validateUserRequestUseCase = new IsUserRequestCorrectUseCase(userRequestRepository);
 const isAllowedToFinishPasswordResetProcess = new IsAllowedToFinishPasswordResetProcessUseCase(
-	validateUserRequestUseCase
+	hasher
 );
 
 export const load: LayoutServerLoad = async ({ params, locals }) => {

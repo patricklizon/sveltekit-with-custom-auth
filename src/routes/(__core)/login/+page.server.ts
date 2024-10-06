@@ -1,7 +1,7 @@
 import { UserErrorType } from '$lib/shared/domain/__core/user';
 import { error, fail, redirect, type Actions } from '@sveltejs/kit';
 import { PasswordHasher, CookieSessionManager } from '$lib/server/infrastructure/__core/security';
-import { LoginWithCredentialsUseCase, UserRepository } from '$lib/server/modules/__core/user';
+import { LoginWithCredentialsUseCase } from '$lib/server/modules/__core/user';
 import { ReadRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
 import { resolveRoute } from '$app/paths';
 import { RawPath } from '$lib/routes';
@@ -11,12 +11,7 @@ import { UnexpectedErrorType } from '$lib/errors';
 
 const cookieSessionManager = new CookieSessionManager();
 const hasher = new PasswordHasher();
-const userRepository = new UserRepository(hasher);
-const loginWithCredentialsUseCase = new LoginWithCredentialsUseCase(
-	userRepository,
-	hasher,
-	cookieSessionManager
-);
+const loginWithCredentialsUseCase = new LoginWithCredentialsUseCase(hasher, cookieSessionManager);
 
 const readRedirectSearchParam = new ReadRedirectSearchParamUseCase();
 

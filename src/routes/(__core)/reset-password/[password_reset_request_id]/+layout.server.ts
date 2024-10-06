@@ -7,16 +7,12 @@ import { IsAllowedToStartPasswordResetProcessUseCase } from '$lib/server/modules
 import { UnexpectedErrorType } from '$lib/errors';
 import { safeCastId } from '$lib/shared/domain/__core/id';
 import type { LayoutServerLoad } from './$types';
-import {
-	UserRequestRepository,
-	IsUserRequestCorrectUseCase
-} from '$lib/server/modules/__core/user-request';
+import { IsUserRequestCorrectUseCase } from '$lib/server/modules/__core/user-request';
 import { UserRequestErrorType, type UserRequest } from '$lib/shared/domain/__core/user-request';
 import { PasswordHasher } from '$lib/server/infrastructure/__core/security';
 
 const hasher = new PasswordHasher();
-const userRequestRepository = new UserRequestRepository(hasher);
-const validateUserRequestUseCase = new IsUserRequestCorrectUseCase(userRequestRepository);
+const validateUserRequestUseCase = new IsUserRequestCorrectUseCase(hasher);
 const isAllowedToStartPasswordResetProcess = new IsAllowedToStartPasswordResetProcessUseCase(
 	validateUserRequestUseCase
 );

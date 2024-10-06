@@ -1,10 +1,11 @@
 import { UserDoesNotExistsError, type User } from '$lib/shared/domain/__core/user';
 import { err, ok, ResultAsync } from 'neverthrow';
 import { UnexpectedError } from '$lib/errors';
-import { TwoFactor } from '$lib/server/infrastructure/__core/security';
+import { PasswordHasher, TwoFactor } from '$lib/server/infrastructure/__core/security';
 import type { UserRequest } from '$lib/shared/domain/__core/user-request';
-import type { UserRequestRepository } from '$lib/server/modules//__core/user-request';
-import type { UserRepository } from '../repository';
+import { UserRequestRepository, UserRequestType } from '$lib/server/modules//__core/user-request';
+import { UserRepository } from '../repository';
+import { database } from '$lib/server/infrastructure/persistance';
 
 type UseCaseInput = Readonly<{
 	email: User['email'];
@@ -14,33 +15,37 @@ type UseCaseResult = ResultAsync<UserRequest['id'], UserDoesNotExistsError | Une
 
 export class CreatePasswordResetRequestUseCase {
 	constructor(
-		private userRepository: UserRepository,
-		private userRequestRepository: UserRequestRepository,
-		private twoFactor: TwoFactor
+		private twoFactor: TwoFactor,
+		private hasher: PasswordHasher,
+		private db = database
 	) {}
 	async execute(input: UseCaseInput): Promise<UseCaseResult> {
-		try {
-			const user = await this.userRepository.findByEmail(input.email);
+		return this.db.transaction(async (tx) => {
+			try {
+				const userRepository = new UserRepository(this.hasher, tx);
+				const userRequestRepository = new UserRequestRepository(this.hasher, tx);
 
-			if (!user) {
-				return err(new UserDoesNotExistsError(input.email));
+				const user = await userRepository.findByEmail(input.email);
+
+				if (!user) {
+					return err(new UserDoesNotExistsError(input.email));
+				}
+
+				await userRequestRepository.deleteAllOfTypeByUserId(UserRequestType.ResetPassword, user.id);
+
+				const requestId = await userRequestRepository.save({
+					otp: this.twoFactor.generateOTP(),
+					userId: user.id,
+					type: UserRequestType.ResetPassword
+				});
+
+				// TODO: implement notification through 'communication channel -> email'
+				// await this.sendCodeWithConfirmation.execute(user.email);
+
+				return ok(requestId);
+			} catch (error) {
+				return err(new UnexpectedError(error));
 			}
-
-			// TODO: extract 'password_reset' to enum
-			await this.userRequestRepository.deleteAllOfTypeByUserId('password_reset', user.id);
-
-			const requestId = await this.userRequestRepository.save({
-				otp: this.twoFactor.generateOTP(),
-				userId: user.id,
-				type: 'password_reset'
-			});
-
-			// TODO: implement notification through 'communication channel -> email'
-			// await this.sendCodeWithConfirmation.execute(user.email);
-
-			return ok(requestId);
-		} catch (error) {
-			return err(new UnexpectedError(error));
-		}
+		});
 	}
 }

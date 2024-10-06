@@ -6,11 +6,10 @@ import {
 import { err, ok, Result } from 'neverthrow';
 import { UnexpectedError } from '$lib/errors';
 import type { UserRequest } from '$lib/shared/domain/__core/user-request';
-import type {
-	UserRequestRepository,
-	UserRequestType
-} from '$lib/server/modules/__core/user-request';
-import type { UserRepository } from '../../user';
+import { UserRequestRepository, UserRequestType } from '$lib/server/modules/__core/user-request';
+import { UserRepository } from '../../user';
+import { database } from '$lib/server/infrastructure/persistance';
+import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
 
 type UseCaseInput = Readonly<{
 	otp: UserPlainTextOTP;
@@ -33,39 +32,41 @@ type UseCaseResult = Result<
  */
 export class CreateUserRequestUseCase {
 	constructor(
-		private userRepository: UserRepository,
-		private userRequestRepository: UserRequestRepository
+		private hasher: PasswordHasher,
+		private db = database
 	) {}
 
 	/**
 	 * Executes the use case
 	 */
 	async execute(input: UseCaseInput): Promise<UseCaseResult> {
-		try {
-			// TODO: make it parot of transaction
-			const user = await this.userRepository.findUserById(input.userId);
-			if (!user) {
-				return err(new UserDoesNotExistsError(input.userId));
+		return this.db.transaction(async (tx) => {
+			try {
+				const userRepository = new UserRepository(this.hasher, tx);
+				const userRequestRepository = new UserRequestRepository(this.hasher, tx);
+
+				const user = await userRepository.findUserById(input.userId);
+				if (!user) {
+					return err(new UserDoesNotExistsError(input.userId));
+				}
+
+				const userRequestId = await userRequestRepository.save({
+					otp: input.otp,
+					userId: user.id,
+					type: input.type
+				});
+
+				await userRequestRepository.deleteAllOfTypeButOneByUserId(
+					input.type,
+					userRequestId,
+					user.id
+				);
+
+				return ok({ userRequestId });
+			} catch (error) {
+				// TODO: rollback transaction on error
+				return err(new UnexpectedError(error));
 			}
-
-			// TODO: make it parot of transaction
-			const userRequestId = await this.userRequestRepository.save({
-				otp: input.otp,
-				userId: user.id,
-				type: input.type
-			});
-
-			// TODO: make it parot of transaction
-			await this.userRequestRepository.deleteAllOfTypeButOneByUserId(
-				input.type,
-				userRequestId,
-				user.id
-			);
-
-			return ok({ userRequestId });
-		} catch (error) {
-			// TODO: rollback transaction on error
-			return err(new UnexpectedError(error));
-		}
+		});
 	}
 }

@@ -1,9 +1,9 @@
 import type { Option } from '$lib/types';
 import {
-	database,
 	DatabaseReadError,
 	DatabaseWriteError,
-	userRequests
+	userRequests,
+	type DB
 } from '$lib/server/infrastructure/persistance';
 import { and, eq, ne } from 'drizzle-orm';
 import type { UserRequest, UserRequestSaveDTO } from '$lib/shared/domain/__core/user-request';
@@ -12,7 +12,7 @@ import type { PasswordHasher } from '$lib/server/infrastructure/__core/security'
 export class UserRequestRepository {
 	constructor(
 		private hasher: PasswordHasher,
-		private db = database
+		private db: DB
 	) {}
 
 	async save({ otp, type, userId }: Readonly<UserRequestSaveDTO>): Promise<UserRequest['id']> {

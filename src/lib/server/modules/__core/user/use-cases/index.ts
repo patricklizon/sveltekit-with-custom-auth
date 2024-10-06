@@ -10,3 +10,4 @@ export * from './refresh-session';
 export * from './register-with-credentials';
 export * from './register-with-external-account';
 export * from './toggle-two-factor-authentication';
+export * from './confirm-email';

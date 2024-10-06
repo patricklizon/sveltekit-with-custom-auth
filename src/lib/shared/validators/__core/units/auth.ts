@@ -18,10 +18,15 @@ export const registerPasswordSchema = z
 	.min(8, 'Password must be at least 8 characters')
 	.transform((v) => safeCastId<UserPlainTextPassword, string>(v));
 
+export const registerPasswordConfirmationSchema = z
+	.string()
+	.min(1, 'Field is required')
+	.transform((v) => safeCastId<UserPlainTextPassword, string>(v));
+
 export const confirmPasswordSchema = z
 	.object({
 		password: registerPasswordSchema,
-		passwordConfirmation: registerPasswordSchema
+		passwordConfirmation: registerPasswordConfirmationSchema
 	})
 	.refine((val) => val.password === val.passwordConfirmation, {
 		message: "Passwords don't match",

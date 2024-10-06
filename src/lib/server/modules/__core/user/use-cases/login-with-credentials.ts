@@ -1,5 +1,5 @@
 import type { Option } from '$lib/types';
-import type { UserRepository } from '../repository';
+import { UserRepository } from '../repository';
 import {
 	UserCorruptionError,
 	UserDoesNotExistsError,
@@ -15,6 +15,7 @@ import type {
 	CookieSessionManager
 } from '$lib/server/infrastructure/__core/security';
 import { UnexpectedError } from '$lib/errors';
+import { database } from '$lib/server/infrastructure/persistance';
 
 type UseCaseContext = {
 	cookies: Cookies;
@@ -34,20 +35,21 @@ type UseCaseResult = ResultAsync<
 
 export class LoginWithCredentialsUseCase {
 	constructor(
-		private userRepository: UserRepository,
 		private hasher: PasswordHasher,
-		private cookieSessionManager: CookieSessionManager
+		private cookieSessionManager: CookieSessionManager,
+		private db = database
 	) {}
 
 	async execute(ctx: UseCaseContext, input: UseCaseInput): Promise<UseCaseResult> {
 		try {
-			const user = await this.userRepository.findByEmail(input.email);
+			const userRepository = new UserRepository(this.hasher, this.db);
+			const user = await userRepository.findByEmail(input.email);
 			if (!user) {
 				await this.simulatePasswordVerification();
 				return err(new UserDoesNotExistsError(input.email));
 			}
 
-			const password = await this.userRepository.findUserPasswordById(user.id);
+			const password = await userRepository.findUserPasswordById(user.id);
 			if (!password) {
 				await this.simulatePasswordVerification();
 				return err(

@@ -4,6 +4,7 @@
 - [ ] Encrypt database,
 - [ ] CRON job for removing expired sessions based on expiratoin time and last time password was changed,
 - [x] User requests backend,
+- [ ] reset password + invalidate sessions,
 - [ ] password chagne + invalidate sessions,
 - [ ] email change + invalidate tokens
 - [ ] user account changes log table

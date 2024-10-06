@@ -6,7 +6,8 @@ import {
 	UserRequestNonExistingError,
 	UserRequestNonConfirmedError
 } from '$lib/shared/domain/__core/user-request';
-import type { IsUserRequestCorrectUseCase } from '$lib/server/modules/__core/user-request';
+import { IsUserRequestCorrectUseCase } from '$lib/server/modules/__core/user-request';
+import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
 
 type UseCaseInput = Readonly<{
 	userId: UserRequest['userId'];
@@ -27,12 +28,13 @@ type UseCaseResult = ResultAsync<
  * This use case checks if a password reset request exists, is not expired, and has been verified.
  */
 export class IsAllowedToFinishPasswordResetProcessUseCase {
-	constructor(private isUserRequestCorrectUseCase: IsUserRequestCorrectUseCase) {}
+	constructor(private hasher: PasswordHasher) {}
 
 	// TODO: handle unexpected errors
 	async execute(input: UseCaseInput): Promise<UseCaseResult> {
 		try {
-			const validationResult = await this.isUserRequestCorrectUseCase.execute(input);
+			const isUserRequestCorrectUseCase = new IsUserRequestCorrectUseCase(this.hasher);
+			const validationResult = await isUserRequestCorrectUseCase.execute(input);
 			if (validationResult.isErr()) {
 				return err(validationResult.error);
 			}

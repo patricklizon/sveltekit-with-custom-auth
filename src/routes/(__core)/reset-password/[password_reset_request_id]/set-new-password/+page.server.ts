@@ -3,6 +3,7 @@ import { resetPasswordSetNewPasswordFormDataSchema } from '$lib/shared/validator
 import type { FormParseFail } from '$lib/types';
 import { fail, type Actions } from '@sveltejs/kit';
 
+// TODO: Finish implementation
 export const actions: Actions = {
 	deafult: async ({ request }) => {
 		const formData = Object.fromEntries(await request.formData());

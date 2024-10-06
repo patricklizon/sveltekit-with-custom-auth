@@ -5,10 +5,12 @@ import {
 	type UserRequest
 } from '$lib/shared/domain/__core/user-request';
 import { err, ok, Result } from 'neverthrow';
-import type { UserRequestRepository } from '../repository';
-import type { UserRepository } from '../../user/repository';
+import { UserRequestRepository } from '../repository';
+import { UserRepository } from '../../user/repository';
 import type { EmailRejectedError } from '$lib/shared/domain/__core/email/errors';
-import type { UnexpectedError } from '$lib/errors';
+import { UnexpectedError } from '$lib/errors';
+import { database, safeTxRollback } from '$lib/server/infrastructure/persistance';
+import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
 
 type UseCaseInput = Readonly<{
 	userId: UserRequest['userId'];
@@ -32,39 +34,49 @@ type UseCaseResult = Result<
  */
 export class SendEmailWithConfirmationCodeForUserRequestUseCase {
 	constructor(
+		private hasher: PasswordHasher,
 		private emailService: EmailService,
-		private userRequestRepository: UserRequestRepository,
-		private userRepository: UserRepository
+		private db = database
 	) {}
 
 	/**
 	 * Executes the use case
 	 */
 	async execute(input: UseCaseInput): Promise<UseCaseResult> {
-		const userRequest = await this.userRequestRepository.findById(
-			input.userId,
-			input.userRequestId
-		);
-		if (!userRequest) {
-			return err(new UserRequestNonExistingError(input.userRequestId));
-		}
+		return this.db.transaction(async (tx) => {
+			try {
+				const userRequestRepository = new UserRequestRepository(this.hasher, tx);
+				const userRepository = new UserRepository(this.hasher, tx);
 
-		const userEmail = await this.userRepository.getUserEmail(input.userId);
-		if (!userEmail) {
-			return err(new UserDoesNotExistsError(input.userId));
-		}
+				const userRequest = await userRequestRepository.findById(input.userId, input.userRequestId);
+				if (!userRequest) {
+					safeTxRollback(tx);
+					return err(new UserRequestNonExistingError(input.userRequestId));
+				}
 
-		const sendResult = await this.emailService.send({
-			to: userEmail.email,
-			html: `<h1>confirmation code ${input.otp}</h1>`,
-			subject: 'request confirmation code',
-			text: `confirmation code ${input.otp}`
+				const userEmail = await userRepository.getUserEmail(input.userId);
+				if (!userEmail) {
+					safeTxRollback(tx);
+					return err(new UserDoesNotExistsError(input.userId));
+				}
+
+				const sendResult = await this.emailService.send({
+					to: userEmail.email,
+					html: `<h1>confirmation code ${input.otp}</h1>`,
+					subject: 'request confirmation code',
+					text: `confirmation code ${input.otp}`
+				});
+
+				if (sendResult.isErr()) {
+					safeTxRollback(tx);
+					return err(sendResult.error);
+				}
+
+				return ok(sendResult.value);
+			} catch (error) {
+				safeTxRollback(tx);
+				return err(new UnexpectedError(error));
+			}
 		});
-
-		if (sendResult.isErr()) {
-			return err(sendResult.error);
-		}
-
-		return ok(sendResult.value);
 	}
 }

@@ -8,10 +8,11 @@ import {
 	UserRequestNonExistingError,
 	type UserRequest
 } from '$lib/shared/domain/__core/user-request';
-import type {
+import {
 	IsUserRequestCorrectUseCase,
 	UserRequestRepository
 } from '$lib/server/modules/__core/user-request';
+import { database } from '$lib/server/infrastructure/persistance';
 
 type UseCaseInput = Readonly<{
 	userId: UserRequest['userId'];
@@ -37,8 +38,9 @@ type UseCaseResult = ResultAsync<
 export class ConfirmUserRequestUseCase {
 	constructor(
 		private isUserRequestCorrectUseCase: IsUserRequestCorrectUseCase,
-		private userRequestRepository: UserRequestRepository,
-		private hasher: PasswordHasher
+
+		private hasher: PasswordHasher,
+		private db = database
 	) {}
 
 	/**
@@ -46,6 +48,7 @@ export class ConfirmUserRequestUseCase {
 	 */
 	async execute(input: UseCaseInput): Promise<UseCaseResult> {
 		try {
+			const userRequestRepository = new UserRequestRepository(this.hasher, this.db);
 			const isRequestCorrectResult = await this.isUserRequestCorrectUseCase.execute(input);
 			if (isRequestCorrectResult.isErr()) {
 				return err(isRequestCorrectResult.error);
@@ -57,7 +60,7 @@ export class ConfirmUserRequestUseCase {
 				return err(new UserRequestInvalidCodeError(userRequest.id));
 			}
 
-			const confirmedUserRequest = await this.userRequestRepository.confirm(
+			const confirmedUserRequest = await userRequestRepository.confirm(
 				input.userId,
 				userRequest.id
 			);

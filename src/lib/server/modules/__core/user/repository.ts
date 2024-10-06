@@ -8,9 +8,9 @@ import type {
 	UserPlainTextPassword
 } from '$lib/shared/domain/__core/user';
 import {
-	database,
 	DatabaseReadError,
-	DatabaseWriteError
+	DatabaseWriteError,
+	type DB
 } from '$lib/server/infrastructure/persistance';
 import { users, userPasswords } from '$lib/server/infrastructure/persistance';
 import { eq, sql } from 'drizzle-orm';
@@ -19,7 +19,7 @@ import type { PasswordHasher } from '$lib/server/infrastructure/__core/security'
 export class UserRepository {
 	constructor(
 		private hasher: PasswordHasher,
-		private db = database
+		private db: DB
 	) {}
 
 	// TODO: handle error. This select will throw when nothing nothing is found
@@ -81,8 +81,8 @@ export class UserRepository {
 
 	async save(user: UserRegisterDTO, password: UserPlainTextPassword): Promise<UserDBSelectModel> {
 		try {
-			return await this.db.transaction(async (trx) => {
-				const [result] = await trx
+			return await this.db.transaction(async (tx) => {
+				const [result] = await tx
 					.insert(users)
 					.values({
 						email: user.email
@@ -90,7 +90,7 @@ export class UserRepository {
 					.returning();
 				if (!result) throw new DatabaseWriteError('Updating did not return any value');
 
-				await trx.insert(userPasswords).values({
+				await tx.insert(userPasswords).values({
 					hashedPassword: await this.hasher.hash(password),
 					userId: result.id
 				});

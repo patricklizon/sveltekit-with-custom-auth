@@ -12,9 +12,9 @@ import { DomainError } from '$lib/errors';
 import type { Enum } from '$lib/types';
 import type { User } from './types';
 export const UserErrorType = {
-	InvalidData: 'domain/user/error/InvalidData',
 	AlreadyExists: 'domain/user/error/AlreadyExists',
 	NonExisting: 'domain/user/error/NonExisting',
+	EmailAlreadyVerified: 'domain/user/error/EmailAlreadyVerified',
 	InvalidPassword: 'domain/user/error/InvalidPassword',
 	DataCorruption: 'domain/user/error/DataCorruption',
 	Validation: 'domain/user/error/Validation'
@@ -22,9 +22,9 @@ export const UserErrorType = {
 
 export type UserErrorType = Enum<typeof UserErrorType>;
 
-export class UserInvalidDataError extends DomainError<typeof UserErrorType.InvalidData> {
+export class UserValidationError extends DomainError<typeof UserErrorType.Validation> {
 	constructor(message: string) {
-		super(UserErrorType.InvalidData, undefined, message);
+		super(UserErrorType.Validation, undefined, message);
 	}
 }
 
@@ -43,6 +43,15 @@ export class UserDoesNotExistsError extends DomainError<
 > {
 	constructor(identifier: User['email'] | User['id']) {
 		super(UserErrorType.NonExisting, { identifier }, 'User does not exists');
+	}
+}
+
+export class UserEmailAlreadyVerifiedError extends DomainError<
+	typeof UserErrorType.EmailAlreadyVerified,
+	{ identifier: User['id'] }
+> {
+	constructor(identifier: User['id']) {
+		super(UserErrorType.EmailAlreadyVerified, { identifier }, 'Email is already verified');
 	}
 }
 

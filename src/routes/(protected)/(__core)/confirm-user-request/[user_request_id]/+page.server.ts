@@ -1,6 +1,6 @@
 import { UserErrorType } from '$lib/shared/domain/__core/user';
 import type { FormParseFail } from '$lib/types';
-import { fail, redirect } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import { ReadRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
 import { userRequestConfirmFormDataSchema } from '$lib/shared/validators/__core';
@@ -9,24 +9,17 @@ import { RawPath } from '$lib/routes';
 import {
 	ConfirmUserRequestUseCase,
 	IsUserRequestCorrectUseCase,
-	UserRequestRepository,
 	UserRequestType
 } from '$lib/server/modules/__core/user-request';
 import { isValidUserSession, PasswordHasher } from '$lib/server/infrastructure/__core/security';
 import { UserRequestErrorType } from '$lib/shared/domain/__core/user-request';
 import { UnexpectedErrorType } from '$lib/errors';
-import { UserRepository } from '$lib/server/modules/__core/user';
+import { ConfirmEmailUseCase } from '$lib/server/modules/__core/user/use-cases';
 
 const readRedirectSearchParam = new ReadRedirectSearchParamUseCase();
 const hasher = new PasswordHasher();
-const userRepository = new UserRepository(hasher);
-const userRequestRepositroy = new UserRequestRepository(hasher);
-const isUserRequestCorrect = new IsUserRequestCorrectUseCase(userRequestRepositroy);
-const confirmUserRequest = new ConfirmUserRequestUseCase(
-	isUserRequestCorrect,
-	userRequestRepositroy,
-	hasher
-);
+const isUserRequestCorrect = new IsUserRequestCorrectUseCase(hasher);
+const confirmUserRequest = new ConfirmUserRequestUseCase(isUserRequestCorrect, hasher);
 
 export const actions: Actions = {
 	default: async ({ request, locals }) => {
@@ -53,7 +46,7 @@ export const actions: Actions = {
 			userId: locals.user.id
 		});
 
-		// TODO: handle
+		// TODO: handle errors
 		if (confirmResult.isErr()) {
 			switch (confirmResult.error.type) {
 				case UserRequestErrorType.Expired:
@@ -73,8 +66,21 @@ export const actions: Actions = {
 				console.log(confirmResult.value.type);
 				return;
 			}
-			case UserRequestType.ConfirmEmail: {
-				await userRepository.setEmailAsVerified(confirmResult.value.userId);
+			case UserRequestType.ConfirmUserEmail: {
+				const confirmEmail = new ConfirmEmailUseCase(hasher);
+				const result = await confirmEmail.execute({ userId: confirmResult.value.userId });
+				if (result.isErr()) {
+					switch (result.error.type) {
+						case UserErrorType.NonExisting:
+						case UnexpectedErrorType: {
+							throw error(500, result.error);
+						}
+						// TODO: do not break the app, log error
+						case UserErrorType.EmailAlreadyVerified: {
+							break; // do nothing
+						}
+					}
+				}
 			}
 		}
 

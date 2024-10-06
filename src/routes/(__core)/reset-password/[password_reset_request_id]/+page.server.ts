@@ -2,10 +2,7 @@ import { resolveRoute } from '$app/paths';
 import { UnexpectedErrorType } from '$lib/errors';
 import { RawPath } from '$lib/routes';
 import { PasswordHasher } from '$lib/server/infrastructure/__core/security';
-import {
-	UserRequestRepository,
-	IsUserRequestCorrectUseCase
-} from '$lib/server/modules/__core/user-request';
+
 import { ConfirmPasswordResetRequestUseCase } from '$lib/server/modules/__core/user/use-cases/confirm-password-reset-request';
 import { UserErrorType } from '$lib/shared/domain/__core/user';
 import { UserRequestErrorType } from '$lib/shared/domain/__core/user-request';
@@ -14,13 +11,7 @@ import type { FormFail, FormParseFail } from '$lib/types';
 import { error, fail, redirect, type Actions } from '@sveltejs/kit';
 
 const hasher = new PasswordHasher();
-const userRequestRepository = new UserRequestRepository(hasher);
-const validateUserRequestUseCase = new IsUserRequestCorrectUseCase(userRequestRepository);
-const confirmPasswordResetRequest = new ConfirmPasswordResetRequestUseCase(
-	userRequestRepository,
-	validateUserRequestUseCase,
-	hasher
-);
+const confirmPasswordResetRequest = new ConfirmPasswordResetRequestUseCase(hasher);
 
 export const actions: Actions = {
 	default: async ({ request, locals }) => {

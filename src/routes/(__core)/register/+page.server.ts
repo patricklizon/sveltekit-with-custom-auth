@@ -2,7 +2,6 @@ import { UserErrorType } from '$lib/shared/domain/__core/user';
 
 import { error, fail, redirect, type Actions } from '@sveltejs/kit';
 import {
-	UserRepository,
 	RegisterWithCredentialsUseCase,
 	LoginWithCredentialsUseCase
 } from '$lib/server/modules/__core/user';
@@ -18,9 +17,7 @@ import { userRegistrationWithCredentialsFormDataSchema } from '$lib/shared/valid
 import { UnexpectedErrorType } from '$lib/errors';
 import {
 	CreateUserRequestConfirmEmailUseCase,
-	CreateUserRequestUseCase,
-	SendEmailWithConfirmationCodeForUserRequestUseCase,
-	UserRequestRepository
+	UserRequestType
 } from '$lib/server/modules/__core/user-request';
 import { EmailService } from '$lib/server/infrastructure/__core/email';
 import { EmailErrorType } from '$lib/shared/domain/__core/email/errors';
@@ -28,33 +25,20 @@ import { SetRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-se
 import { UserRequestErrorType } from '$lib/shared/domain/__core/user-request';
 
 const hasher = new PasswordHasher();
-const userRepository = new UserRepository(hasher);
 const cookieSessionManager = new CookieSessionManager();
-const userRequestRepository = new UserRequestRepository(hasher);
 const twoFactor = new TwoFactor();
 const emailService = new EmailService();
-const createUserRequestUseCase = new CreateUserRequestUseCase(
-	userRepository,
-	userRequestRepository,
-	twoFactor
-);
-const sendEmailUserRequestConfirmationUseCase =
-	new SendEmailWithConfirmationCodeForUserRequestUseCase(
-		emailService,
-		userRequestRepository,
-		userRepository
-	);
+
 const createUserRequestConfirmEmailUseCase = new CreateUserRequestConfirmEmailUseCase(
 	twoFactor,
-	sendEmailUserRequestConfirmationUseCase,
-	createUserRequestUseCase
-);
-const registerWithCredentialsUseCase = new RegisterWithCredentialsUseCase(userRepository);
-const loginWithCredentialsUseCase = new LoginWithCredentialsUseCase(
-	userRepository,
 	hasher,
-	cookieSessionManager
+	emailService
 );
+const registerWithCredentialsUseCase = new RegisterWithCredentialsUseCase(
+	createUserRequestConfirmEmailUseCase,
+	hasher
+);
+const loginWithCredentialsUseCase = new LoginWithCredentialsUseCase(hasher, cookieSessionManager);
 
 const setRedirectSearchParam = new SetRedirectSearchParamUseCase();
 
@@ -67,7 +51,7 @@ export const actions: Actions = {
 		if (!formDataParseResult.success) {
 			return fail(400, {
 				success: false,
-				data: formDataParseResult,
+				data: formData,
 				errorType: UserErrorType.Validation,
 				errorByFieldName: formDataParseResult.error.flatten().fieldErrors
 			} satisfies FormParseFail);
@@ -78,9 +62,10 @@ export const actions: Actions = {
 
 		// TODO: handle
 		if (registrationResult.isErr()) {
+			console.error(registrationResult.error);
 			switch (registrationResult.error.type) {
 				case UserErrorType.AlreadyExists:
-				case UserErrorType.InvalidData: {
+				case UserErrorType.Validation: {
 					return fail(400, {
 						success: false,
 						data: registrationResult.error.data,
@@ -88,6 +73,9 @@ export const actions: Actions = {
 						errorType: registrationResult.error.type
 					} satisfies FormFail);
 				}
+				case UserRequestErrorType.NonExisting:
+				case UserErrorType.NonExisting:
+				case EmailErrorType.Rejected:
 				case UnexpectedErrorType: {
 					throw error(500, registrationResult.error);
 				}
@@ -106,35 +94,21 @@ export const actions: Actions = {
 			}
 		);
 
-		// TODO: handle
+		// TODO: handle errors
 		if (loginResult.isErr()) {
 			switch (loginResult.error.type) {
 				case UserErrorType.NonExisting:
 				case UserErrorType.DataCorruption:
 				case UserErrorType.InvalidPassword:
 				case UnexpectedErrorType: {
+					console.error(loginResult.error);
 					return error(500, loginResult.error);
 				}
 			}
 		}
 
-		const confirmEmailResult = await createUserRequestConfirmEmailUseCase.execute({
-			userId: loginResult.value.id
-		});
-
-		if (confirmEmailResult.isErr()) {
-			switch (confirmEmailResult.error.type) {
-				case EmailErrorType.Rejected:
-				case UserErrorType.NonExisting:
-				case UserRequestErrorType.NonExisting:
-				case UnexpectedErrorType: {
-					return error(500, confirmEmailResult.error);
-				}
-			}
-		}
-
 		const nextRoute = resolveRoute(RawPath.ConfirmUserRequest, {
-			user_request_id: confirmEmailResult.value.userRequestId
+			user_request_id: registrationResult.value.userRequestId
 		});
 		const redirectRoute = resolveRoute(RawPath.Home, {});
 		const nextUrlResult = setRedirectSearchParam.execute({

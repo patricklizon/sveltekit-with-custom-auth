@@ -9,13 +9,8 @@ import {
 } from '$lib/server/infrastructure/__core/security';
 import { resolveRoute } from '$app/paths';
 import { RawPath } from '$lib/routes';
-import { LogoutUseCase, UserRepository } from '$lib/server/modules/__core/user';
-import {
-	CreateUserRequestConfirmEmailUseCase,
-	CreateUserRequestUseCase,
-	SendEmailWithConfirmationCodeForUserRequestUseCase,
-	UserRequestRepository
-} from '$lib/server/modules/__core/user-request';
+import { LogoutUseCase } from '$lib/server/modules/__core/user';
+import { CreateUserRequestConfirmEmailUseCase } from '$lib/server/modules/__core/user-request';
 import { EmailService } from '$lib/server/infrastructure/__core/email';
 import { EmailErrorType } from '$lib/shared/domain/__core/email/errors';
 import { UserErrorType, type User } from '$lib/shared/domain/__core/user';
@@ -26,25 +21,15 @@ import { UserRequestErrorType } from '$lib/shared/domain/__core/user-request';
 const twoFactor = new TwoFactor();
 const emailService = new EmailService();
 const hasher = new PasswordHasher();
-const userRepository = new UserRepository(hasher);
-const userRequestRepository = new UserRequestRepository(hasher);
 const cookieSessionManager = new CookieSessionManager();
 const logout = new LogoutUseCase(cookieSessionManager);
-const createUserRequestUseCase = new CreateUserRequestUseCase(
-	userRepository,
-	userRequestRepository,
-	twoFactor
-);
 const setRedirectSearchParamUseCase = new SetRedirectSearchParamUseCase();
-const sendEmailUseCase = new SendEmailWithConfirmationCodeForUserRequestUseCase(
-	emailService,
-	userRequestRepository,
-	userRepository
-);
+
 const createUserRequestConfirmEmailUseCase = new CreateUserRequestConfirmEmailUseCase(
 	twoFactor,
-	sendEmailUseCase,
-	createUserRequestUseCase
+
+	hasher,
+	emailService
 );
 
 export const load: LayoutServerLoad = async ({ locals, cookies, url }) => {

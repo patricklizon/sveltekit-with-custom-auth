@@ -1,4 +1,12 @@
+import { err, ok, ResultAsync } from 'neverthrow';
+
+import type { CreateUserRequestConfirmEmailUseCase } from '../../user-request';
 import { UserRepository } from '../repository';
+
+import { UnexpectedError, UnexpectedErrorType } from '$lib/errors';
+import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
+import { database, safeTxRollback } from '$lib/server/infrastructure/persistance';
+import { EmailErrorType, type EmailRejectedError } from '$lib/shared/domain/__core/email/errors';
 import {
 	UserAlreadyExistsError,
 	UserDoesNotExistsError,
@@ -7,18 +15,12 @@ import {
 	type User,
 	type UserPlainTextPassword
 } from '$lib/shared/domain/__core/user';
-import { err, ok, ResultAsync } from 'neverthrow';
-import { UnexpectedError, UnexpectedErrorType } from '$lib/errors';
-import { userRegistrationWithCredentialsFormDataSchema } from '$lib/shared/validators/__core/register';
-import { database, safeTxRollback } from '$lib/server/infrastructure/persistance';
-import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
-import type { CreateUserRequestConfirmEmailUseCase } from '../../user-request';
-import { EmailErrorType, type EmailRejectedError } from '$lib/shared/domain/__core/email/errors';
 import {
 	UserRequestErrorType,
 	type UserRequest,
 	type UserRequestNonExistingError
 } from '$lib/shared/domain/__core/user-request';
+import { userRegistrationWithCredentialsFormDataSchema } from '$lib/shared/validators/__core/register';
 
 type UseCaseInput = Readonly<{
 	email: User['email'];

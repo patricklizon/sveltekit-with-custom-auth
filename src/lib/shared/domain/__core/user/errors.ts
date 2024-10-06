@@ -8,9 +8,10 @@
  * All custom errors extend DomainError with specific error types and data.
  */
 
+import type { User } from './types';
+
 import { DomainError } from '$lib/errors';
 import type { Enum } from '$lib/types';
-import type { User } from './types';
 export const UserErrorType = {
 	AlreadyExists: 'domain/user/error/AlreadyExists',
 	NonExisting: 'domain/user/error/NonExisting',

@@ -1,11 +1,12 @@
+import { Argon2id } from 'oslo/password';
+
+import { safeCastId } from '$lib/shared/domain/__core/id';
 import type {
 	UserHashedOTP,
 	UserHashedPassword,
 	UserPlainTextOTP,
 	UserPlainTextPassword
 } from '$lib/shared/domain/__core/user';
-import { safeCastId } from '$lib/shared/domain/__core/id';
-import { Argon2id } from 'oslo/password';
 
 /**
  * Provides methods for hashing and verifying passwords using the Argon2id algorithm.

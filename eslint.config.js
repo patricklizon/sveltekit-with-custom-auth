@@ -4,6 +4,7 @@ import svelte from 'eslint-plugin-svelte';
 import prettierConfig from 'eslint-config-prettier';
 import globals from 'globals';
 import drizzle from 'eslint-plugin-drizzle';
+import importPlugin from 'eslint-plugin-import';
 
 const typescriptConfig = {
 	rules: {
@@ -127,10 +128,29 @@ const drizzleConfigOverride = {
 	}
 };
 
+const importRulesConfig = {
+	plugins: {
+		import: importPlugin
+	},
+	rules: {
+		...importPlugin.configs.rules,
+		'import/no-unresolved': 'off', // check done by typescript
+		'import/order': [
+			'warn',
+			{
+				'newlines-between': 'always',
+				alphabetize: { order: 'asc', caseInsensitive: true }
+			}
+		],
+		'import/no-default-export': 'warn'
+	}
+};
+
 export default ts.config(
 	js.configs.recommended,
 	...ts.configs.strict,
 	...ts.configs.stylistic,
+	importRulesConfig,
 	typescriptConfig,
 	...svelte.configs['flat/recommended'],
 	prettierConfig,

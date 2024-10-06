@@ -1,18 +1,19 @@
-import { type UserPlainTextOTP } from '$lib/shared/domain/__core/user';
 import { err, ok, ResultAsync } from 'neverthrow';
+
 import { UnexpectedError } from '$lib/errors';
 import { PasswordHasher } from '$lib/server/infrastructure/__core/security';
+import { database } from '$lib/server/infrastructure/persistance';
+import {
+	IsUserRequestCorrectUseCase,
+	UserRequestRepository
+} from '$lib/server/modules/__core/user-request';
+import { type UserPlainTextOTP } from '$lib/shared/domain/__core/user';
 import {
 	UserRequestExpiredError,
 	UserRequestInvalidCodeError,
 	UserRequestNonExistingError,
 	type UserRequest
 } from '$lib/shared/domain/__core/user-request';
-import {
-	IsUserRequestCorrectUseCase,
-	UserRequestRepository
-} from '$lib/server/modules/__core/user-request';
-import { database } from '$lib/server/infrastructure/persistance';
 
 type UseCaseInput = Readonly<{
 	userId: UserRequest['userId'];

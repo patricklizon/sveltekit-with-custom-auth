@@ -1,14 +1,14 @@
 import { err, ok, Result } from 'neverthrow';
 
+import { UnexpectedError } from '$lib/errors';
+import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
+import { database } from '$lib/server/infrastructure/persistance';
+import { UserRequestRepository } from '$lib/server/modules/__core/user-request';
 import {
 	UserRequestExpiredError,
 	UserRequestNonExistingError,
 	type UserRequest
 } from '$lib/shared/domain/__core/user-request';
-import { UnexpectedError } from '$lib/errors';
-import { UserRequestRepository } from '$lib/server/modules/__core/user-request';
-import { database } from '$lib/server/infrastructure/persistance';
-import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
 
 type UseCaseInput = Readonly<{
 	userId: UserRequest['userId'];

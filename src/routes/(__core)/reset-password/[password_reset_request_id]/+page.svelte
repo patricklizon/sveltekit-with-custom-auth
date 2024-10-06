@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData, SubmitFunction } from './$types';
+
 	import { enhance } from '$app/forms';
 	import { resolveRoute } from '$app/paths';
 	import { RawPath } from '$lib/routes';

@@ -1,7 +1,8 @@
 import { DrizzleSQLiteAdapter } from '@lucia-auth/adapter-drizzle';
-import { database, sessions, users } from '$lib/server/infrastructure/persistance';
 import { Lucia, TimeSpan } from 'lucia';
+
 import { dev } from '$app/environment';
+import { database, sessions, users } from '$lib/server/infrastructure/persistance';
 import type { User } from '$lib/shared/domain/__core/user';
 
 const adapter = new DrizzleSQLiteAdapter(database, sessions, users);

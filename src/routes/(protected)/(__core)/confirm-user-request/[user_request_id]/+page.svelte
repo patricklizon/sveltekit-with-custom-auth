@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { type PageData, type SubmitFunction } from './$types';
+
+	import { enhance } from '$app/forms';
 
 	export let data: PageData;
 

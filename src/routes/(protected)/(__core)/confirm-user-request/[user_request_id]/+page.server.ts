@@ -1,20 +1,22 @@
-import { UserErrorType } from '$lib/shared/domain/__core/user';
-import type { FormParseFail } from '$lib/types';
 import { error, fail, redirect } from '@sveltejs/kit';
+
 import type { Actions } from './$types';
-import { ReadRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
-import { userRequestConfirmFormDataSchema } from '$lib/shared/validators/__core';
+
 import { resolveRoute } from '$app/paths';
+import { UnexpectedErrorType } from '$lib/errors';
 import { RawPath } from '$lib/routes';
+import { isValidUserSession, PasswordHasher } from '$lib/server/infrastructure/__core/security';
+import { ConfirmEmailUseCase } from '$lib/server/modules/__core/user/use-cases';
 import {
 	ConfirmUserRequestUseCase,
 	IsUserRequestCorrectUseCase,
 	UserRequestType
 } from '$lib/server/modules/__core/user-request';
-import { isValidUserSession, PasswordHasher } from '$lib/server/infrastructure/__core/security';
+import { UserErrorType } from '$lib/shared/domain/__core/user';
 import { UserRequestErrorType } from '$lib/shared/domain/__core/user-request';
-import { UnexpectedErrorType } from '$lib/errors';
-import { ConfirmEmailUseCase } from '$lib/server/modules/__core/user/use-cases';
+import { ReadRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
+import { userRequestConfirmFormDataSchema } from '$lib/shared/validators/__core';
+import type { FormParseFail } from '$lib/types';
 
 const readRedirectSearchParam = new ReadRedirectSearchParamUseCase();
 const hasher = new PasswordHasher();

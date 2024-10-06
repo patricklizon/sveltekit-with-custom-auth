@@ -1,7 +1,8 @@
+import { fail, type Actions } from '@sveltejs/kit';
+
 import { UserErrorType } from '$lib/shared/domain/__core/user';
 import { resetPasswordSetNewPasswordFormDataSchema } from '$lib/shared/validators/__core';
 import type { FormParseFail } from '$lib/types';
-import { fail, type Actions } from '@sveltejs/kit';
 
 // TODO: Finish implementation
 export const actions: Actions = {

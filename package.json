@@ -5,13 +5,14 @@
 	"scripts": {
 		"build": "vite build",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:format": "prettier --check .",
-		"check:lint": "eslint .",
+		"check:format": "prettier --check ./src",
+		"check:lint": "eslint ./src",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
 		"dev": "vite dev",
-		"fix:format": "prettier --write .",
+		"fix:format": "prettier --write ./src",
+		"fix:lint": "pnpm check:lint --fix",
 		"preview": "vite preview"
 	},
 	"devDependencies": {
@@ -27,6 +28,7 @@
 		"eslint": "^9.0.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-drizzle": "^0.2.3",
+		"eslint-plugin-import": "^2.31.0",
 		"eslint-plugin-svelte": "^2.36.0",
 		"globals": "^15.0.0",
 		"prettier": "^3.1.1",

@@ -1,6 +1,7 @@
+import { base32 } from 'oslo/encoding';
+
 import { safeCastId } from '$lib/shared/domain/__core/id';
 import type { UserPlainTextOTP, UserRecoveryCode } from '$lib/shared/domain/__core/user';
-import { base32 } from 'oslo/encoding';
 
 export class TwoFactor {
 	generateOTP(): UserPlainTextOTP {

@@ -1,5 +1,15 @@
-import type { Option } from '$lib/types';
+import { err, ok, ResultAsync } from 'neverthrow';
+
 import { UserRepository } from '../repository';
+
+import { UnexpectedError } from '$lib/errors';
+import type {
+	Cookies,
+	PasswordHasher,
+	CookieSessionManager
+} from '$lib/server/infrastructure/__core/security';
+import { database } from '$lib/server/infrastructure/persistance';
+import { safeCastId } from '$lib/shared/domain/__core/id';
 import {
 	UserCorruptionError,
 	UserDoesNotExistsError,
@@ -7,15 +17,7 @@ import {
 	type UserPlainTextPassword,
 	type User
 } from '$lib/shared/domain/__core/user';
-import { err, ok, ResultAsync } from 'neverthrow';
-import { safeCastId } from '$lib/shared/domain/__core/id';
-import type {
-	Cookies,
-	PasswordHasher,
-	CookieSessionManager
-} from '$lib/server/infrastructure/__core/security';
-import { UnexpectedError } from '$lib/errors';
-import { database } from '$lib/server/infrastructure/persistance';
+import type { Option } from '$lib/types';
 
 type UseCaseContext = {
 	cookies: Cookies;

@@ -1,17 +1,20 @@
+import { err, ok, Result } from 'neverthrow';
+
+import { UserRequestType } from '../config';
+
+import { CreateUserRequestUseCase } from './create-user-request';
+import { SendEmailWithConfirmationCodeForUserRequestUseCase } from './send-email-with-confirmation-code-for-user-request';
+
+import { UnexpectedError } from '$lib/errors';
+import type { EmailService } from '$lib/server/infrastructure/__core/email';
+import type { PasswordHasher, TwoFactor } from '$lib/server/infrastructure/__core/security';
+import { database } from '$lib/server/infrastructure/persistance';
+import { type EmailRejectedError } from '$lib/shared/domain/__core/email/errors';
 import { UserDoesNotExistsError } from '$lib/shared/domain/__core/user';
 import {
 	UserRequestNonExistingError,
 	type UserRequest
 } from '$lib/shared/domain/__core/user-request';
-import { err, ok, Result } from 'neverthrow';
-import { type EmailRejectedError } from '$lib/shared/domain/__core/email/errors';
-import { UnexpectedError } from '$lib/errors';
-import { CreateUserRequestUseCase } from './create-user-request';
-import type { PasswordHasher, TwoFactor } from '$lib/server/infrastructure/__core/security';
-import { UserRequestType } from '../config';
-import { SendEmailWithConfirmationCodeForUserRequestUseCase } from './send-email-with-confirmation-code-for-user-request';
-import { database } from '$lib/server/infrastructure/persistance';
-import type { EmailService } from '$lib/server/infrastructure/__core/email';
 
 type UseCaseInput = Readonly<{
 	userId: UserRequest['userId'];

@@ -1,9 +1,11 @@
 import { redirect } from '@sveltejs/kit';
+
 import type { LayoutServerLoad } from './$types';
-import { ReadRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
-import { isValidUserSession } from '$lib/server/infrastructure/__core/security';
+
 import { resolveRoute } from '$app/paths';
 import { RawPath } from '$lib/routes';
+import { isValidUserSession } from '$lib/server/infrastructure/__core/security';
+import { ReadRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
 
 const readRedirectSearchParam = new ReadRedirectSearchParamUseCase();
 

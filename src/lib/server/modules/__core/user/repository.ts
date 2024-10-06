@@ -1,4 +1,12 @@
-import type { Option } from '$lib/types';
+import { eq, sql } from 'drizzle-orm';
+
+import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
+import {
+	DatabaseReadError,
+	DatabaseWriteError,
+	type DB
+} from '$lib/server/infrastructure/persistance';
+import { users, userPasswords } from '$lib/server/infrastructure/persistance';
 import type {
 	User,
 	UserPasswordsDBSelectModel,
@@ -7,14 +15,7 @@ import type {
 	UserRegisterDTO,
 	UserPlainTextPassword
 } from '$lib/shared/domain/__core/user';
-import {
-	DatabaseReadError,
-	DatabaseWriteError,
-	type DB
-} from '$lib/server/infrastructure/persistance';
-import { users, userPasswords } from '$lib/server/infrastructure/persistance';
-import { eq, sql } from 'drizzle-orm';
-import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
+import type { Option } from '$lib/types';
 
 export class UserRepository {
 	constructor(

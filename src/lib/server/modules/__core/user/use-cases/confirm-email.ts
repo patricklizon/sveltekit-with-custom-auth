@@ -1,14 +1,15 @@
+import { err, ok, Result } from 'neverthrow';
+
+import { UserRepository } from '../repository';
+
+import { UnexpectedError } from '$lib/errors';
+import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
+import { database, safeTxRollback } from '$lib/server/infrastructure/persistance';
 import {
 	UserDoesNotExistsError,
 	UserEmailAlreadyVerifiedError,
 	type User
 } from '$lib/shared/domain/__core/user';
-import { err, ok, Result } from 'neverthrow';
-import { UnexpectedError } from '$lib/errors';
-
-import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
-import { database, safeTxRollback } from '$lib/server/infrastructure/persistance';
-import { UserRepository } from '../repository';
 
 type UseCaseInput = Readonly<{
 	userId: User['id'];

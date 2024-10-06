@@ -1,5 +1,6 @@
-import type { Enum } from '$lib/types';
 import { UrlSearchParamName } from './types';
+
+import type { Enum } from '$lib/types';
 
 /**
  * Mappings between URL search parameter names and their in URL display names.

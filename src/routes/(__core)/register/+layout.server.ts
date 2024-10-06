@@ -1,5 +1,7 @@
 import { redirect } from '@sveltejs/kit';
+
 import type { LayoutServerLoad } from './$types';
+
 import { resolveRoute } from '$app/paths';
 import { RawPath } from '$lib/routes';
 

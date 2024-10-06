@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import type { ActionData, SubmitFunction } from './$types';
+
+	import { enhance } from '$app/forms';
 
 	const handleSubmit: SubmitFunction = () => {
 		return ({ update }) => {

@@ -1,16 +1,18 @@
+import { err, ok, Result } from 'neverthrow';
+
+import { UserRepository } from '../../user/repository';
+import { UserRequestRepository } from '../repository';
+
+import { UnexpectedError } from '$lib/errors';
 import type { EmailService } from '$lib/server/infrastructure/__core/email';
+import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
+import { database, safeTxRollback } from '$lib/server/infrastructure/persistance';
+import type { EmailRejectedError } from '$lib/shared/domain/__core/email/errors';
 import { UserDoesNotExistsError, type UserPlainTextOTP } from '$lib/shared/domain/__core/user';
 import {
 	UserRequestNonExistingError,
 	type UserRequest
 } from '$lib/shared/domain/__core/user-request';
-import { err, ok, Result } from 'neverthrow';
-import { UserRequestRepository } from '../repository';
-import { UserRepository } from '../../user/repository';
-import type { EmailRejectedError } from '$lib/shared/domain/__core/email/errors';
-import { UnexpectedError } from '$lib/errors';
-import { database, safeTxRollback } from '$lib/server/infrastructure/persistance';
-import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
 
 type UseCaseInput = Readonly<{
 	userId: UserRequest['userId'];

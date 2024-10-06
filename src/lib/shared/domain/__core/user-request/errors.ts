@@ -8,9 +8,10 @@
  * All custom errors extend DomainError with specific error types and data.
  */
 
+import type { UserRequest } from './type';
+
 import { DomainError } from '$lib/errors';
 import type { Enum } from '$lib/types';
-import type { UserRequest } from './type';
 
 export const UserRequestErrorType = {
 	Expired: 'domain/user-request/error/Expired',

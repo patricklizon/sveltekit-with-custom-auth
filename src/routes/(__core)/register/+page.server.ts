@@ -1,28 +1,26 @@
-import { UserErrorType } from '$lib/shared/domain/__core/user';
 
 import { error, fail, redirect, type Actions } from '@sveltejs/kit';
-import {
-	RegisterWithCredentialsUseCase,
-	LoginWithCredentialsUseCase
-} from '$lib/server/modules/__core/user';
+
+import { resolveRoute } from '$app/paths';
+import { UnexpectedErrorType } from '$lib/errors';
+import { RawPath } from '$lib/routes';
+import { EmailService } from '$lib/server/infrastructure/__core/email';
 import {
 	PasswordHasher,
 	CookieSessionManager,
 	TwoFactor
 } from '$lib/server/infrastructure/__core/security';
-import { resolveRoute } from '$app/paths';
-import { RawPath } from '$lib/routes';
-import type { FormFail, FormParseFail } from '$lib/types';
-import { userRegistrationWithCredentialsFormDataSchema } from '$lib/shared/validators/__core/register';
-import { UnexpectedErrorType } from '$lib/errors';
 import {
-	CreateUserRequestConfirmEmailUseCase,
-	UserRequestType
-} from '$lib/server/modules/__core/user-request';
-import { EmailService } from '$lib/server/infrastructure/__core/email';
+	RegisterWithCredentialsUseCase,
+	LoginWithCredentialsUseCase
+} from '$lib/server/modules/__core/user';
+import { CreateUserRequestConfirmEmailUseCase } from '$lib/server/modules/__core/user-request';
 import { EmailErrorType } from '$lib/shared/domain/__core/email/errors';
-import { SetRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
+import { UserErrorType } from '$lib/shared/domain/__core/user';
 import { UserRequestErrorType } from '$lib/shared/domain/__core/user-request';
+import { SetRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
+import { userRegistrationWithCredentialsFormDataSchema } from '$lib/shared/validators/__core/register';
+import type { FormFail, FormParseFail } from '$lib/types';
 
 const hasher = new PasswordHasher();
 const cookieSessionManager = new CookieSessionManager();

@@ -1,14 +1,16 @@
-import type { Option } from '$lib/types';
 import { err, ok, type Result } from 'neverthrow';
+
 import {
 	urlSearchParamDisplayNameByUrlSearchParamName,
 	UrlSearchParamStrategy,
 	SerializationPrefix,
 	sep
 } from './config';
+import { UrlSearchParamDeserializationError } from './errors';
 import type { UrlSearchParamName } from './types';
 import { normalizeAbsoluteUrlPath } from './utils';
-import { UrlSearchParamDeserializationError } from './errors';
+
+import type { Option } from '$lib/types';
 
 /**
  * Represents the context for reading URL search parameters.

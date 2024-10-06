@@ -1,8 +1,9 @@
 <script lang="ts">
+	import type { ActionData, SubmitFunction } from './$types';
+
 	import { enhance } from '$app/forms';
 	import { resolveRoute } from '$app/paths';
 	import { RawPath } from '$lib/routes';
-	import type { ActionData, SubmitFunction } from './$types';
 
 	let { form } = $props<{ form?: ActionData }>();
 	let isSubmitting = $state(false);

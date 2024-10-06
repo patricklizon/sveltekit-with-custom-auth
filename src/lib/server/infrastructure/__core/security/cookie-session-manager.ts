@@ -1,6 +1,8 @@
-import { type Option } from '$lib/types';
 import type { Cookie, Session, User } from 'lucia';
+
 import { lucia } from './lucia';
+
+import { type Option } from '$lib/types';
 
 export type RefreshSessionResult = { user: User; session: Session };
 

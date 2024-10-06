@@ -1,13 +1,14 @@
 import { err, ok, ResultAsync } from 'neverthrow';
+
 import { UnexpectedError } from '$lib/errors';
+import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
+import { IsUserRequestCorrectUseCase } from '$lib/server/modules/__core/user-request';
 import {
 	type UserRequest,
 	UserRequestExpiredError,
 	UserRequestNonExistingError,
 	UserRequestNonConfirmedError
 } from '$lib/shared/domain/__core/user-request';
-import { IsUserRequestCorrectUseCase } from '$lib/server/modules/__core/user-request';
-import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
 
 type UseCaseInput = Readonly<{
 	userId: UserRequest['userId'];

@@ -1,6 +1,6 @@
 import type { Handle } from '@sveltejs/kit';
-
 import { sequence } from '@sveltejs/kit/hooks';
+
 import { CookieSessionManager } from '$lib/server/infrastructure/__core/security';
 import { RefreshSessionUseCase } from '$lib/server/modules/__core/user';
 

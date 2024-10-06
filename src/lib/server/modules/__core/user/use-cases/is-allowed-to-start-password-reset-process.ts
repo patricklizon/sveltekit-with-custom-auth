@@ -1,11 +1,12 @@
 import { err, Result } from 'neverthrow';
+
 import { UnexpectedError } from '$lib/errors';
+import type { IsUserRequestCorrectUseCase } from '$lib/server/modules/__core/user-request';
 import type {
 	UserRequest,
 	UserRequestExpiredError,
 	UserRequestNonExistingError
 } from '$lib/shared/domain/__core/user-request';
-import type { IsUserRequestCorrectUseCase } from '$lib/server/modules/__core/user-request';
 
 type UseCaseInput = Readonly<{
 	userId: UserRequest['userId'];

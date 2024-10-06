@@ -1,11 +1,13 @@
-import { UserDoesNotExistsError, type User } from '$lib/shared/domain/__core/user';
 import { err, ok, ResultAsync } from 'neverthrow';
+
+import { UserRepository } from '../repository';
+
 import { UnexpectedError } from '$lib/errors';
 import { PasswordHasher, TwoFactor } from '$lib/server/infrastructure/__core/security';
-import type { UserRequest } from '$lib/shared/domain/__core/user-request';
-import { UserRequestRepository, UserRequestType } from '$lib/server/modules//__core/user-request';
-import { UserRepository } from '../repository';
 import { database } from '$lib/server/infrastructure/persistance';
+import { UserRequestRepository, UserRequestType } from '$lib/server/modules//__core/user-request';
+import { UserDoesNotExistsError, type User } from '$lib/shared/domain/__core/user';
+import type { UserRequest } from '$lib/shared/domain/__core/user-request';
 
 type UseCaseInput = Readonly<{
 	email: User['email'];

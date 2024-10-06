@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { confirmPasswordSchema } from './units/auth';
 
 export const userRegistrationWithCredentialsFormDataSchema = z.intersection(

@@ -1,14 +1,15 @@
+import { relations } from 'drizzle-orm';
+import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+
+import { createId } from '../../../../../shared/domain/__core/id';
 import type {
 	UserHashedPassword,
 	ExternalAccountProviderId,
 	UserExternalAccountId,
 	UserId
 } from '../../../../../shared/domain/__core/user';
-import { createId } from '../../../../../shared/domain/__core/id';
-
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
-import { relations } from 'drizzle-orm';
 import { sqlDefaultCreatedAt, sqlDefaultUpdatedAt } from '../../utils';
+
 import { userRequests } from './user-requests';
 
 /**

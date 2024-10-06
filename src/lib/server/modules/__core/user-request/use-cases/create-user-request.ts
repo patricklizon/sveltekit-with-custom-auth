@@ -1,15 +1,17 @@
+import { err, ok, Result } from 'neverthrow';
+
+import { UserRepository } from '../../user';
+
+import { UnexpectedError } from '$lib/errors';
+import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
+import { database } from '$lib/server/infrastructure/persistance';
+import { UserRequestRepository, UserRequestType } from '$lib/server/modules/__core/user-request';
 import {
 	UserDoesNotExistsError,
 	type User,
 	type UserPlainTextOTP
 } from '$lib/shared/domain/__core/user';
-import { err, ok, Result } from 'neverthrow';
-import { UnexpectedError } from '$lib/errors';
 import type { UserRequest } from '$lib/shared/domain/__core/user-request';
-import { UserRequestRepository, UserRequestType } from '$lib/server/modules/__core/user-request';
-import { UserRepository } from '../../user';
-import { database } from '$lib/server/infrastructure/persistance';
-import type { PasswordHasher } from '$lib/server/infrastructure/__core/security';
 
 type UseCaseInput = Readonly<{
 	otp: UserPlainTextOTP;

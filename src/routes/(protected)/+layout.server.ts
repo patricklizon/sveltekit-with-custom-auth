@@ -1,21 +1,23 @@
 import { redirect } from '@sveltejs/kit';
+
 import type { LayoutServerLoad } from './$types';
-import { SetRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
+
+import { resolveRoute } from '$app/paths';
+import { UnexpectedErrorType } from '$lib/errors';
+import { RawPath } from '$lib/routes';
+import { EmailService } from '$lib/server/infrastructure/__core/email';
 import {
 	CookieSessionManager,
 	isValidUserSession,
 	PasswordHasher,
 	TwoFactor
 } from '$lib/server/infrastructure/__core/security';
-import { resolveRoute } from '$app/paths';
-import { RawPath } from '$lib/routes';
 import { LogoutUseCase } from '$lib/server/modules/__core/user';
 import { CreateUserRequestConfirmEmailUseCase } from '$lib/server/modules/__core/user-request';
-import { EmailService } from '$lib/server/infrastructure/__core/email';
 import { EmailErrorType } from '$lib/shared/domain/__core/email/errors';
 import { UserErrorType, type User } from '$lib/shared/domain/__core/user';
-import { UnexpectedErrorType } from '$lib/errors';
 import { UserRequestErrorType } from '$lib/shared/domain/__core/user-request';
+import { SetRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
 
 // TODO: Manage DI
 const twoFactor = new TwoFactor();

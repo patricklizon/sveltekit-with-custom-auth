@@ -1,6 +1,7 @@
+import type { Session, User as LU } from 'lucia';
+
 import type { User } from '$lib/shared/domain/__core/user';
 import type { Option } from '$lib/types';
-import type { Session, User as LU } from 'lucia';
 
 export function isValidUserSession(o: {
 	user: Option<LU>;

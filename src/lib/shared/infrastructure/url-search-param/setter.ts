@@ -1,12 +1,14 @@
-import { mapURLtoAbsoluteUrlPathWithSearchAndFragment, normalizeAbsoluteUrlPath } from './utils';
+import { err, ok, type Result } from 'neverthrow';
+
 import {
 	urlSearchParamDisplayNameByUrlSearchParamName,
 	UrlSearchParamStrategy,
 	SerializationPrefix
 } from './config';
-import { UrlSearchParamName } from './types';
 import { UrlSearchParamSerializationError } from './errors';
-import { err, ok, type Result } from 'neverthrow';
+import { UrlSearchParamName } from './types';
+import { mapURLtoAbsoluteUrlPathWithSearchAndFragment, normalizeAbsoluteUrlPath } from './utils';
+
 
 /**
  * Represents the context for writing URL search parameters.

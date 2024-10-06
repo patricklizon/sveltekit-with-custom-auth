@@ -1,9 +1,10 @@
-import { UnexpectedError } from '$lib/errors';
-import { EmailRejectedError } from '$lib/shared/domain/__core/email/errors';
 import { err, ok, type Result } from 'neverthrow';
 import { createTransport } from 'nodemailer';
 import { z } from 'zod';
+
 import { env as privateEnv } from '$env/dynamic/private';
+import { UnexpectedError } from '$lib/errors';
+import { EmailRejectedError } from '$lib/shared/domain/__core/email/errors';
 
 const schema = z.object({
 	SMTP_HOST: z.string(),

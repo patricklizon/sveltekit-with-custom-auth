@@ -1,11 +1,18 @@
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 
-import { CookieSessionManager } from '$lib/server/infrastructure/__core/security';
-import { RefreshSessionUseCase } from '$lib/server/modules/__core/user';
+import { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
+import { database } from '$lib/server/infrastructure/persistance';
+import { SessionService } from '$lib/server/infrastructure/session';
+import { SessionRepository } from '$lib/server/infrastructure/session/repository';
+import { UserRepository } from '$lib/server/infrastructure/user';
+import { RefreshSessionUseCase } from '$lib/server/use-cases/user';
 
-const cookieSessionManager = new CookieSessionManager();
-const refreshSessionUseCase = new RefreshSessionUseCase(cookieSessionManager);
+const hasher = new PasswordHashingService();
+const userRepository = new UserRepository(hasher, database);
+const sessionRepository = new SessionRepository(database);
+const sessionService = new SessionService(sessionRepository, userRepository);
+const refreshSessionUseCase = new RefreshSessionUseCase(sessionService);
 
 /**
  * Handles session refresh for the application.
@@ -17,7 +24,7 @@ const refreshSessionUseCase = new RefreshSessionUseCase(cookieSessionManager);
  * Ensure any changes are thoroughly tested and align with the overall auth strategy.
  */
 const handleSessionRefresh: Handle = async ({ event, resolve }) => {
-	const refreshResult = await refreshSessionUseCase.execute(event.cookies);
+	const refreshResult = await refreshSessionUseCase.execute(event);
 
 	event.locals.user = refreshResult?.user;
 	event.locals.session = refreshResult?.session;

@@ -5,13 +5,13 @@ declare global {
 		// interface Error {}
 		/** available on server side */
 		interface Locals {
-			user: import('lucia').User | null | undefined;
-			session: import('lucia').Session | null | undefined;
+			user: import('$lib/domain/user').User | null | undefined;
+			session: import('$lib/domain/session').Session | null | undefined;
 		}
 		/** available on client side */
 		interface PageData {
-			user: import('lucia').User | null | undefined;
-			session: import('lucia').Session | null | undefined;
+			user: import('$lib/domain/user').User | null | undefined;
+			session: import('$lib/domain/session').Session | null | undefined;
 		}
 		// interface PageState {}
 		// interface Platform {}

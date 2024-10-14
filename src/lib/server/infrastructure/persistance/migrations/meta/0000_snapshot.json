@@ -1,16 +1,23 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "c35f1efa-7880-4f07-8dbc-bff6459774e2",
+  "id": "08cbf8fc-7a8e-4bf3-989a-0093da88e1b1",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
-    "session": {
-      "name": "session",
+    "sessions": {
+      "name": "sessions",
       "columns": {
         "id": {
           "name": "id",
           "type": "text",
           "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -27,13 +34,20 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "is_two_factor_verified": {
+          "name": "is_two_factor_verified",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "session_user_id_user_id_fk": {
-          "name": "session_user_id_user_id_fk",
-          "tableFrom": "session",
+        "sessions_user_id_user_id_fk": {
+          "name": "sessions_user_id_user_id_fk",
+          "tableFrom": "sessions",
           "tableTo": "user",
           "columnsFrom": [
             "user_id"
@@ -224,24 +238,40 @@
           "notNull": true,
           "autoincrement": false
         },
-        "email_verified": {
-          "name": "email_verified",
+        "is_email_verified": {
+          "name": "is_email_verified",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": false
         },
-        "two_factor_enabled": {
-          "name": "two_factor_enabled",
+        "is_ttop_enabled": {
+          "name": "is_ttop_enabled",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": false
         },
-        "two_factor_verified": {
-          "name": "two_factor_verified",
+        "is_passkey_enabled": {
+          "name": "is_passkey_enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "is_security_key_enabled": {
+          "name": "is_security_key_enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "is_2fa_enabled": {
+          "name": "is_2fa_enabled",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,

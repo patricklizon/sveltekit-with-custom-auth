@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-import { safeCastId } from '$lib/shared/domain/__core/id';
-import type { UserPlainTextPassword } from '$lib/shared/domain/__core/user';
+import { safeCastId } from '$lib/domain/id';
+import type { UserPlainTextPassword } from '$lib/domain/user';
 
 export const userEmailSchema = z
 	.string()

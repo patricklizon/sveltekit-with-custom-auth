@@ -1,5 +1,3 @@
-// import { SQL, sql } from 'drizzle-orm';
-
 import type { TX } from '.';
 
 export function sqlCurrentTimeStamp(): Date {
@@ -39,5 +37,6 @@ export function safeTxRollback(tx: TX): void {
 		tx.rollback();
 	} catch {
 		// rollback throws error to break out of transaction
+		// therefore nothing is needed here
 	}
 }

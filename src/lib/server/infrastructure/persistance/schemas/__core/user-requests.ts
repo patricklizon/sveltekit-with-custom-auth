@@ -1,11 +1,10 @@
-
 import { relations } from 'drizzle-orm';
 import { integer, text } from 'drizzle-orm/sqlite-core';
 import { sqliteTable } from 'drizzle-orm/sqlite-core';
 
-import { createId } from '../../../../../shared/domain/__core/id';
-import type { UserHashedOTP, UserId } from '../../../../../shared/domain/__core/user';
-import type { UserRequestId } from '../../../../../shared/domain/__core/user-request';
+import { createId } from '../../../../../domain/id';
+import type { UserHashedOTP, UserId } from '../../../../../domain/user';
+import type { UserRequestId, UserRequestType } from '../../../../../domain/user-request';
 import { sqlDefaultCreatedAt } from '../../utils';
 
 import { users } from './users';
@@ -16,8 +15,8 @@ export const userRequests = sqliteTable('user_request', {
 		.notNull()
 		.references(() => users.id)
 		.$type<UserId>(),
-	// TODO: add strong type
-	type: text('type').notNull(),
+	// TODO: add strong type to suer request type
+	type: text('type').notNull().$type<UserRequestType>(),
 	// TODO: add type -> .$type<UserRequestType>(),
 	hashedOTP: text('hashed_otp').notNull().$type<UserHashedOTP>(),
 	expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),

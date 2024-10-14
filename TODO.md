@@ -1,3 +1,5 @@
+- [ ] after registration there are some redundant redirections,
+- [ ] enable Rate limiting,
 - [ ] Enable stric linter,
 - [ ] Use transactions,
 - [ ] Implement rate limiter,

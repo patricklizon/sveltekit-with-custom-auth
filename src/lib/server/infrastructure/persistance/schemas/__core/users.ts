@@ -1,13 +1,13 @@
 import { relations } from 'drizzle-orm';
 import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
-import { createId } from '../../../../../shared/domain/__core/id';
+import { createId } from '../../../../../domain/id';
 import type {
 	UserHashedPassword,
 	ExternalAccountProviderId,
 	UserExternalAccountId,
 	UserId
-} from '../../../../../shared/domain/__core/user';
+} from '../../../../../domain/user';
 import { sqlDefaultCreatedAt, sqlDefaultUpdatedAt } from '../../utils';
 
 import { userRequests } from './user-requests';
@@ -28,9 +28,13 @@ export const users = sqliteTable(
 			.$onUpdate(sqlDefaultUpdatedAt),
 		deletedAt: integer('deleted_at', { mode: 'timestamp_ms' }),
 		email: text('email').notNull().unique(),
-		emailVerified: integer('email_verified', { mode: 'boolean' }).notNull().default(false),
-		twoFactorEnabled: integer('two_factor_enabled', { mode: 'boolean' }).notNull().default(false),
-		twoFactorVerified: integer('two_factor_verified', { mode: 'boolean' }).notNull().default(false)
+		isEmailVerified: integer('is_email_verified', { mode: 'boolean' }).notNull().default(false),
+		isTTOPEnabled: integer('is_ttop_enabled', { mode: 'boolean' }).notNull().default(false),
+		isPasskeyEnabled: integer('is_passkey_enabled', { mode: 'boolean' }).notNull().default(false),
+		isSecurityKeyEnabled: integer('is_security_key_enabled', { mode: 'boolean' })
+			.notNull()
+			.default(false),
+		is2FAEnabled: integer('is_2fa_enabled', { mode: 'boolean' }).notNull().default(false)
 	},
 	(table) => ({
 		emailIdx: index('email_idx').on(table.email)

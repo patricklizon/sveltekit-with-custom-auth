@@ -2,9 +2,9 @@ import { z } from 'zod';
 
 import { confirmPasswordSchema, userEmailSchema } from './units/auth';
 
-import { safeCastId } from '$lib/shared/domain/__core/id';
-import type { UserPlainTextOTP } from '$lib/shared/domain/__core/user';
-import type { UserRequestId } from '$lib/shared/domain/__core/user-request';
+import { safeCastId } from '$lib/domain/id';
+import type { UserPlainTextOTP } from '$lib/domain/user';
+import type { UserRequestId } from '$lib/domain/user-request';
 
 /**
  * Schema for form initializing password reset process

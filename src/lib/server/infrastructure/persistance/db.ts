@@ -1,5 +1,5 @@
 import sqlite from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 
 import { env } from '$env/dynamic/private';
@@ -12,7 +12,7 @@ export const database =
 export type DB = typeof database;
 export type TX = Parameters<Parameters<typeof database.transaction>[0]>[0];
 
-function createTestDatabase() {
+function createTestDatabase(): BetterSQLite3Database {
 	const db = drizzle(sqlite(':memory:'));
 
 	migrate(db, { migrationsFolder: './migrations' });

@@ -18,5 +18,6 @@ export default defineConfig({
 		url: dbCredentials.DB_URL
 	},
 	strict: true,
-	verbose: true
+	verbose: true,
+	casing: 'snake_case'
 });

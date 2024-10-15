@@ -20,7 +20,7 @@ import { UnexpectedError, UnexpectedErrorType } from '$lib/errors';
 import type { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
 import { database, safeTxRollback } from '$lib/server/infrastructure/persistance';
 import { UserRepository } from '$lib/server/infrastructure/user';
-import { userRegistrationWithCredentialsFormDataSchema } from '$lib/shared/validators/__core/register';
+import { userRegistrationWithCredentialsFormDataSchema } from '$lib/shared/infrastructure/validators/register';
 
 type UseCaseInput = Readonly<{
 	email: User['email'];

@@ -11,7 +11,7 @@ import { SessionRepository } from '$lib/server/infrastructure/session/repository
 import { UserRepository } from '$lib/server/infrastructure/user';
 import { LoginWithCredentialsUseCase } from '$lib/server/use-cases/user';
 import { ReadRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
-import { loginWithCredentialsFormDataSchema } from '$lib/shared/validators/__core/login';
+import { loginWithCredentialsFormDataSchema } from '$lib/shared/infrastructure/validators/login';
 import type { FormFail, FormParseFail } from '$lib/types';
 
 const hasher = new PasswordHashingService();

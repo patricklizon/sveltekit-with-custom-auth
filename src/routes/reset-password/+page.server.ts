@@ -7,7 +7,7 @@ import { RawPath } from '$lib/routes';
 import { OTPService } from '$lib/server/infrastructure/otp';
 import { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
 import { CreatePasswordResetRequestUseCase } from '$lib/server/use-cases/user';
-import { resetPasswordStartProcessFormDataSchema } from '$lib/shared/validators/__core/';
+import { resetPasswordStartProcessFormDataSchema } from '$lib/shared/infrastructure/validators';
 import type { FormFail, FormParseFail } from '$lib/types';
 
 const twoFactor = new OTPService();

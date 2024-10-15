@@ -14,7 +14,7 @@ import {
 	IsUserRequestCorrectUseCase
 } from '$lib/server/use-cases/user-request';
 import { ReadRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
-import { userRequestConfirmFormDataSchema } from '$lib/shared/validators/__core';
+import { userRequestConfirmFormDataSchema } from '$lib/shared/infrastructure/validators';
 import type { FormParseFail } from '$lib/types';
 
 const readRedirectSearchParam = new ReadRedirectSearchParamUseCase();
@@ -75,7 +75,7 @@ export const actions: Actions = {
 						case UnexpectedErrorType: {
 							throw error(500, result.error);
 						}
-						// TODO: do not break the app, log error
+						// TODO: do not break the app, log errowr
 						case UserErrorType.EmailAlreadyVerified: {
 							break; // do nothing
 						}

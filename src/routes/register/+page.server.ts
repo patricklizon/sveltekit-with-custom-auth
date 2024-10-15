@@ -10,8 +10,7 @@ import { EmailService } from '$lib/server/infrastructure/email';
 import { OTPService } from '$lib/server/infrastructure/otp';
 import { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
 import { database } from '$lib/server/infrastructure/persistance';
-import { SessionService } from '$lib/server/infrastructure/session';
-import { SessionRepository } from '$lib/server/infrastructure/session/repository';
+import { SessionService, SessionRepository } from '$lib/server/infrastructure/session';
 import { UserRepository } from '$lib/server/infrastructure/user';
 import {
 	LoginWithCredentialsUseCase,
@@ -19,7 +18,7 @@ import {
 } from '$lib/server/use-cases/user';
 import { CreateUserRequestConfirmEmailUseCase } from '$lib/server/use-cases/user-request';
 import { SetRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
-import { userRegistrationWithCredentialsFormDataSchema } from '$lib/shared/validators/__core/register';
+import { userRegistrationWithCredentialsFormDataSchema } from '$lib/shared/infrastructure/validators/register';
 import type { FormFail, FormParseFail } from '$lib/types';
 
 const hasher = new PasswordHashingService();

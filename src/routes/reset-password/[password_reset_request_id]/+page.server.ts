@@ -7,7 +7,7 @@ import { UnexpectedErrorType } from '$lib/errors';
 import { RawPath } from '$lib/routes';
 import { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
 import { ConfirmPasswordResetRequestUseCase } from '$lib/server/use-cases/user';
-import { resetPasswordConfirmRequestFormDataSchema } from '$lib/shared/validators/__core/reset-password';
+import { resetPasswordConfirmRequestFormDataSchema } from '$lib/shared/infrastructure/validators/reset-password';
 import type { FormFail, FormParseFail } from '$lib/types';
 
 const hasher = new PasswordHashingService();

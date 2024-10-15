@@ -3,16 +3,26 @@ import { defineConfig } from 'drizzle-kit';
 import path from 'node:path';
 
 const dbCredentialsSchema = z.object({
-	DB_URL: z.string()
+	DB_URL: z.string().min(1, 'Database URL is required')
 });
 
-const PERSISTANCE_URL = path.resolve(__dirname, './src/lib/server/infrastructure/persistance');
+const ROOT_DIR = process.cwd(); // Use current working directory
+const PERSISTENCE_DIR = path.join(
+	ROOT_DIR,
+	'src',
+	'lib',
+	'server',
+	'infrastructure',
+	'persistance'
+);
+const SCHEMA_PATH = path.join(PERSISTENCE_DIR, 'schemas', 'index.ts');
+const MIGRATIONS_PATH = path.join(PERSISTENCE_DIR, 'migrations');
 
 const dbCredentials = dbCredentialsSchema.parse(process.env);
 
 export default defineConfig({
-	schema: path.resolve(PERSISTANCE_URL, './schemas/index.ts'),
-	out: path.resolve(PERSISTANCE_URL, './migrations'),
+	schema: SCHEMA_PATH,
+	out: MIGRATIONS_PATH,
 	dialect: 'sqlite',
 	dbCredentials: {
 		url: dbCredentials.DB_URL

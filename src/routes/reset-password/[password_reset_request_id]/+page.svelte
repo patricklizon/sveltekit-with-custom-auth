@@ -9,8 +9,8 @@
 	export let form: ActionData;
 
 	const handleSubmit: SubmitFunction = () => {
-		return ({ update }) => {
-			update({ reset: true });
+		return async ({ update }) => {
+			await update({ reset: true });
 		};
 	};
 </script>

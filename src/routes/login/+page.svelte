@@ -6,8 +6,8 @@
 	import { RawPath } from '$lib/routes';
 
 	const handleSubmit: SubmitFunction = () => {
-		return ({ update }) => {
-			update({ reset: false });
+		return async ({ update }) => {
+			await update({ reset: false });
 		};
 	};
 

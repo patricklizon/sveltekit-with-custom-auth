@@ -36,7 +36,7 @@ export class ConfirmEmailUseCase {
 					return err(new UnexpectedError('Email already verified'));
 				}
 
-				userRepository.setEmailAsVerified(input.userId);
+				await userRepository.setEmailAsVerified(input.userId);
 
 				return ok(true);
 			} catch (error: unknown) {

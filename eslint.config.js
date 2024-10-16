@@ -81,6 +81,7 @@ const typescriptConfig = {
 		'@typescript-eslint/prefer-reduce-type-parameter': 'error',
 		'@typescript-eslint/prefer-return-this-type': 'error',
 		'@typescript-eslint/prefer-string-starts-ends-with': 'error',
+		'@typescript-eslint/no-floating-promises': 'error',
 		'@typescript-eslint/switch-exhaustiveness-check': [
 			'error',
 			{ allowDefaultCaseForExhaustiveSwitch: false }
@@ -102,7 +103,8 @@ const typescriptConfig = {
 				allowHigherOrderFunctions: true,
 				allowConciseArrowFunctionExpressionsStartingWithVoid: true
 			}
-		]
+		],
+		'object-shorthand': 'error'
 	}
 };
 

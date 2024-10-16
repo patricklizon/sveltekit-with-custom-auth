@@ -6,8 +6,8 @@
 	export let data: PageData;
 
 	const handleSubmit: SubmitFunction = () => {
-		return ({ update }) => {
-			update({ reset: false });
+		return async ({ update }) => {
+			await update({ reset: false });
 		};
 	};
 </script>

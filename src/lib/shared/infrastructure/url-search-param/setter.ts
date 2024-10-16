@@ -9,7 +9,6 @@ import { UrlSearchParamSerializationError } from './errors';
 import { UrlSearchParamName } from './types';
 import { mapURLtoAbsoluteUrlPathWithSearchAndFragment, normalizeAbsoluteUrlPath } from './utils';
 
-
 /**
  * Represents the context for writing URL search parameters.
  */

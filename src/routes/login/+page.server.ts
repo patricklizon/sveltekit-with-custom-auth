@@ -10,7 +10,7 @@ import { SessionService } from '$lib/server/infrastructure/session';
 import { SessionRepository } from '$lib/server/infrastructure/session/repository';
 import { UserRepository } from '$lib/server/infrastructure/user';
 import { LoginWithCredentialsUseCase } from '$lib/server/use-cases/user';
-import { ReadRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
+import { readRedirectSearchParam } from '$lib/shared/infrastructure/url-search-param';
 import { loginWithCredentialsFormDataSchema } from '$lib/shared/infrastructure/validators/login';
 import type { FormFail, FormParseFail } from '$lib/types';
 
@@ -19,7 +19,6 @@ const userRepository = new UserRepository(hasher, database);
 const sessionRepository = new SessionRepository(database);
 const sessionService = new SessionService(sessionRepository, userRepository);
 const loginWithCredentialsUseCase = new LoginWithCredentialsUseCase(hasher, sessionService);
-const readRedirectSearchParam = new ReadRedirectSearchParamUseCase();
 
 export const actions: Actions = {
 	default: async (event) => {
@@ -81,7 +80,7 @@ export const actions: Actions = {
 		const fallbackRoute = resolveRoute(RawPath.Home, {});
 		const currentURL = new URL(event.url);
 		const redirectRoute =
-			readRedirectSearchParam.execute(currentURL).mapErr(console.error).unwrapOr(fallbackRoute) ??
+			readRedirectSearchParam(currentURL).mapErr(console.error).unwrapOr(fallbackRoute) ??
 			fallbackRoute;
 
 		throw redirect(302, redirectRoute);

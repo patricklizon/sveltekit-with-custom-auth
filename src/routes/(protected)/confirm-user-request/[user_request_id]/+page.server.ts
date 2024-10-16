@@ -13,11 +13,10 @@ import {
 	ConfirmUserRequestUseCase,
 	IsUserRequestCorrectUseCase
 } from '$lib/server/use-cases/user-request';
-import { ReadRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
+import { readRedirectSearchParam } from '$lib/shared/infrastructure/url-search-param';
 import { userRequestConfirmFormDataSchema } from '$lib/shared/infrastructure/validators';
 import type { FormParseFail } from '$lib/types';
 
-const readRedirectSearchParam = new ReadRedirectSearchParamUseCase();
 const hasher = new PasswordHashingService();
 const isUserRequestCorrect = new IsUserRequestCorrectUseCase(hasher);
 const confirmUserRequest = new ConfirmUserRequestUseCase(isUserRequestCorrect, hasher);
@@ -87,7 +86,7 @@ export const actions: Actions = {
 		const fallbackRoute = resolveRoute(RawPath.Home, {});
 		const currentURL = new URL(request.url);
 		const redirectRoute =
-			readRedirectSearchParam.execute(currentURL).mapErr(console.error).unwrapOr(fallbackRoute) ??
+			readRedirectSearchParam(currentURL).mapErr(console.error).unwrapOr(fallbackRoute) ??
 			fallbackRoute;
 
 		throw redirect(302, redirectRoute);

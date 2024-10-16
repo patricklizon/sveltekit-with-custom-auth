@@ -17,7 +17,7 @@ import { SessionRepository } from '$lib/server/infrastructure/session/repository
 import { UserRepository } from '$lib/server/infrastructure/user';
 import { LogoutUseCase } from '$lib/server/use-cases/user';
 import { CreateUserRequestConfirmEmailUseCase } from '$lib/server/use-cases/user-request';
-import { SetRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
+import { setRedirectSearchParam } from '$lib/shared/infrastructure/url-search-param';
 
 // TODO: Manage DI
 const twoFactor = new OTPService();
@@ -27,7 +27,6 @@ const userRepository = new UserRepository(hasher, database);
 const sessionRepository = new SessionRepository(database);
 const sessionService = new SessionService(sessionRepository, userRepository);
 const logout = new LogoutUseCase(sessionService);
-const setRedirectSearchParamUseCase = new SetRedirectSearchParamUseCase();
 
 const createUserRequestConfirmEmailUseCase = new CreateUserRequestConfirmEmailUseCase(
 	twoFactor,
@@ -39,7 +38,7 @@ const createUserRequestConfirmEmailUseCase = new CreateUserRequestConfirmEmailUs
 export const load: LayoutServerLoad = async ({ locals, cookies, url }) => {
 	if (!locals.session || !locals.user) {
 		await logout.execute(cookies);
-		const loginRoute = setRedirectSearchParamUseCase.execute({
+		const loginRoute = setRedirectSearchParam({
 			url: new URL(resolveRoute(RawPath.Login, {}), url),
 			paramValue: url.href
 		});

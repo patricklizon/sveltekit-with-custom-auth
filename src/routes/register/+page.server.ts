@@ -17,7 +17,7 @@ import {
 	RegisterWithCredentialsUseCase
 } from '$lib/server/use-cases/user';
 import { CreateUserRequestConfirmEmailUseCase } from '$lib/server/use-cases/user-request';
-import { SetRedirectSearchParamUseCase } from '$lib/shared/infrastructure/url-search-param';
+import { setRedirectSearchParam } from '$lib/shared/infrastructure/url-search-param';
 import { userRegistrationWithCredentialsFormDataSchema } from '$lib/shared/infrastructure/validators/register';
 import type { FormFail, FormParseFail } from '$lib/types';
 
@@ -38,8 +38,6 @@ const registerWithCredentialsUseCase = new RegisterWithCredentialsUseCase(
 	hasher
 );
 const loginWithCredentialsUseCase = new LoginWithCredentialsUseCase(hasher, sessionService);
-
-const setRedirectSearchParam = new SetRedirectSearchParamUseCase();
 
 export const actions: Actions = {
 	default: async ({ request, cookies, url, getClientAddress }) => {
@@ -110,7 +108,7 @@ export const actions: Actions = {
 			user_request_id: registrationResult.value.userRequestId
 		});
 		const redirectRoute = resolveRoute(RawPath.Home, {});
-		const nextUrlResult = setRedirectSearchParam.execute({
+		const nextUrlResult = setRedirectSearchParam({
 			url: new URL(nextRoute, url),
 			paramValue: redirectRoute
 		});

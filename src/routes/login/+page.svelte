@@ -2,8 +2,8 @@
 	import type { ActionData, SubmitFunction } from './$types';
 
 	import { enhance } from '$app/forms';
-	import { RawPath } from '$lib/routes';
 	import { resolveRoute } from '$app/paths';
+	import { RawPath } from '$lib/routes';
 
 	const handleSubmit: SubmitFunction = () => {
 		return ({ update }) => {

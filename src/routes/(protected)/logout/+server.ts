@@ -6,8 +6,7 @@ import { resolveRoute } from '$app/paths';
 import { RawPath } from '$lib/routes';
 import { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
 import { database } from '$lib/server/infrastructure/persistance';
-import { SessionService } from '$lib/server/infrastructure/session';
-import { SessionRepository } from '$lib/server/infrastructure/session/repository';
+import { SessionService, SessionRepository } from '$lib/server/infrastructure/session';
 import { UserRepository } from '$lib/server/infrastructure/user';
 import { LogoutUseCase } from '$lib/server/use-cases/user';
 

@@ -4,4 +4,5 @@
 </script>
 
 <h1>Home</h1>
+
 <a href={resolveRoute(RawPath.Logout, {})}>Logout</a>

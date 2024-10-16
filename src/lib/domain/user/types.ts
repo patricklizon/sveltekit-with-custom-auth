@@ -1,5 +1,5 @@
-import type { users, userPasswords } from '$lib/server/infrastructure/persistance';
 import type { Id } from '$lib/domain/id';
+import type { users, userPasswords } from '$lib/server/infrastructure/persistance';
 
 /* USER */
 

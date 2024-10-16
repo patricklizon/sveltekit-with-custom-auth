@@ -5,11 +5,13 @@ declare global {
 		// interface Error {}
 		/** available on server side */
 		interface Locals {
+			acceptLanguage: import('$lib/domain/language').Language;
 			user: import('$lib/domain/user').User | null | undefined;
 			session: import('$lib/domain/session').Session | null | undefined;
 		}
 		/** available on client side */
 		interface PageData {
+			acceptLanguage: import('$lib/domain/language').Language;
 			user: import('$lib/domain/user').User | null | undefined;
 			session: import('$lib/domain/session').Session | null | undefined;
 		}

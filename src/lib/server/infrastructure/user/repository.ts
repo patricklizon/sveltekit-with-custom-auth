@@ -5,37 +5,41 @@ import type {
 	UserPasswordsDBSelectModel,
 	UserDBSelectModel,
 	UserHashedPassword,
-	UserRegisterDTO,
 	UserPlainTextPassword
 } from '$lib/domain/user';
 import type { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
 import {
+	users,
+	userPasswords,
 	DatabaseReadError,
 	DatabaseWriteError,
-	type DB
+	type TX,
+	database
 } from '$lib/server/infrastructure/persistance';
-import { users, userPasswords } from '$lib/server/infrastructure/persistance';
 import type { Option } from '$lib/types';
 
 export class UserRepository {
 	constructor(
 		private hasher: PasswordHashingService,
-		private db: DB
+		private db = database
 	) {}
 
-	async save(user: UserRegisterDTO, password: UserPlainTextPassword): Promise<UserDBSelectModel> {
+	async save(
+		payload: { email: User['email']; password: UserPlainTextPassword },
+		tx?: TX
+	): Promise<UserDBSelectModel> {
 		try {
-			return await this.db.transaction(async (tx) => {
-				const [result] = await tx
+			return await (tx ?? this.db).transaction(async (txx) => {
+				const [result] = await txx
 					.insert(users)
 					.values({
-						email: user.email
+						email: payload.email
 					})
 					.returning();
 				if (!result) throw new DatabaseWriteError('Updating did not return any value');
 
-				await tx.insert(userPasswords).values({
-					hashedPassword: await this.hasher.hash(password),
+				await txx.insert(userPasswords).values({
+					hashedPassword: await this.hasher.hash(payload.password),
 					userId: result.id
 				});
 
@@ -47,12 +51,15 @@ export class UserRepository {
 	}
 
 	// TODO: handle error. This select will throw when nothing is found
-	async findUserPasswordById(id: User['id']): Promise<Option<UserPasswordsDBSelectModel>> {
+	async findUserPasswordById(
+		payload: { userId: User['id'] },
+		tx?: TX
+	): Promise<Option<UserPasswordsDBSelectModel>> {
 		try {
-			const [credentials] = await this.db
+			const [credentials] = await (tx ?? this.db)
 				.select()
 				.from(userPasswords)
-				.where(eq(userPasswords.userId, id))
+				.where(eq(userPasswords.userId, payload.userId))
 				.limit(1);
 
 			return credentials;
@@ -61,30 +68,44 @@ export class UserRepository {
 		}
 	}
 
-	async findByEmail(email: User['email']): Promise<Option<UserDBSelectModel>> {
+	async findByEmail(
+		payload: { email: User['email'] },
+		tx?: TX
+	): Promise<Option<UserDBSelectModel>> {
 		try {
-			const [user] = await this.db.select().from(users).where(eq(users.email, email)).limit(1);
+			const [user] = await (tx ?? this.db)
+				.select()
+				.from(users)
+				.where(eq(users.email, payload.email))
+				.limit(1);
 			return user;
 		} catch (error) {
 			throw new DatabaseReadError(error);
 		}
 	}
 
-	async findById(id: User['id']): Promise<Option<UserDBSelectModel>> {
+	async findById(payload: { userId: User['id'] }, tx?: TX): Promise<Option<UserDBSelectModel>> {
 		try {
-			const [user] = await this.db.select().from(users).where(eq(users.id, id)).limit(1);
+			const [user] = await (tx ?? this.db)
+				.select()
+				.from(users)
+				.where(eq(users.id, payload.userId))
+				.limit(1);
 			return user;
 		} catch (error) {
 			throw new DatabaseReadError(error);
 		}
 	}
 
-	async getUserEmail(id: User['id']): Promise<Option<{ email: string; isVerified: boolean }>> {
+	async getUserEmail(
+		payload: { userId: User['id'] },
+		tx?: TX
+	): Promise<Option<{ email: string; isVerified: boolean }>> {
 		try {
-			const [data] = await this.db
+			const [data] = await (tx ?? this.db)
 				.select({ email: users.email, isVerified: users.isEmailVerified })
 				.from(users)
-				.where(eq(users.id, id))
+				.where(eq(users.id, payload.userId))
 				.limit(1);
 			return data;
 		} catch (error) {
@@ -92,23 +113,26 @@ export class UserRepository {
 		}
 	}
 
-	async updatePassword(id: User['id'], hashedPassword: UserHashedPassword): Promise<void> {
+	async updatePassword(
+		payload: { userId: User['id']; hashedPassword: UserHashedPassword },
+		tx?: TX
+	): Promise<void> {
 		try {
-			await this.db
+			await (tx ?? this.db)
 				.update(userPasswords)
-				.set({ hashedPassword })
-				.where(eq(userPasswords.userId, id));
+				.set({ hashedPassword: payload.hashedPassword })
+				.where(eq(userPasswords.userId, payload.userId));
 		} catch (error) {
 			throw new DatabaseWriteError(error);
 		}
 	}
 
-	async setEmailAsVerified(id: User['id']): Promise<UserDBSelectModel> {
+	async setEmailAsVerified(payload: { userId: User['id'] }, tx?: TX): Promise<UserDBSelectModel> {
 		try {
-			const [result] = await this.db
+			const [result] = await (tx ?? this.db)
 				.update(users)
 				.set({ isEmailVerified: true })
-				.where(eq(users.id, id))
+				.where(eq(users.id, payload.userId))
 				.returning();
 
 			if (!result) throw new DatabaseWriteError('Updating did not return any value');
@@ -119,12 +143,12 @@ export class UserRepository {
 		}
 	}
 
-	async softDelete(id: User['id']): Promise<User['id']> {
+	async softDelete(payload: { userId: User['id'] }, tx?: TX): Promise<User['id']> {
 		try {
-			const [result] = await this.db
+			const [result] = await (tx ?? this.db)
 				.update(users)
 				.set({ deletedAt: sql`(current_timestamp)` })
-				.where(eq(users.id, id))
+				.where(eq(users.id, payload.userId))
 				.returning({ id: users.id });
 
 			if (!result) throw new DatabaseReadError('Deleting did not return any value');
@@ -136,11 +160,11 @@ export class UserRepository {
 	}
 
 	// TODO: return error when not found
-	async delete(id: User['id']): Promise<User['id']> {
+	async delete(payload: { userId: User['id'] }, tx?: TX): Promise<User['id']> {
 		try {
-			const [result] = await this.db
+			const [result] = await (tx ?? this.db)
 				.delete(users)
-				.where(eq(users.id, id))
+				.where(eq(users.id, payload.userId))
 				.returning({ id: users.id });
 
 			if (!result) throw new DatabaseWriteError('Deleting did not return any value');

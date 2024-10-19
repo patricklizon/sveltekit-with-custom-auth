@@ -19,5 +19,9 @@ export const actions: Actions = {
 				errorByFieldName: formDataParseResult.error.flatten().fieldErrors
 			} satisfies FormParseFail);
 		}
+
+		return {
+			success: true
+		};
 	}
 };

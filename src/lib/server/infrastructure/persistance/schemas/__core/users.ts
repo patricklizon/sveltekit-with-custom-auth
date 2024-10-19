@@ -2,6 +2,8 @@ import { relations } from 'drizzle-orm';
 import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 import { createId } from '../../../../../domain/id';
+import type { Language } from '../../../../../domain/language';
+import type { TimeZone } from '../../../../../domain/time';
 import type {
 	UserHashedPassword,
 	ExternalAccountProviderId,
@@ -27,6 +29,10 @@ export const users = sqliteTable(
 			.$default(sqlDefaultCreatedAt)
 			.$onUpdate(sqlDefaultUpdatedAt),
 		deletedAt: integer('deleted_at', { mode: 'timestamp_ms' }),
+		preferredTimeZone: text('preferred_time_zone').$type<TimeZone>(),
+		detectedTimeZone: text('detected_time_zone').notNull().default('UTC').$type<TimeZone>(),
+		preferredLanguage: text('preferred_language').$type<Language>(),
+		detectedLanguage: text('detected_language').notNull().default('UTC').$type<Language>(),
 		email: text('email').notNull().unique(),
 		isEmailVerified: integer('is_email_verified', { mode: 'boolean' }).notNull().default(false),
 		isTTOPEnabled: integer('is_ttop_enabled', { mode: 'boolean' }).notNull().default(false),

@@ -12,11 +12,16 @@ import { PasswordHashingService } from '$lib/server/infrastructure/password-hash
 import { database } from '$lib/server/infrastructure/persistance';
 import { SessionService, SessionRepository } from '$lib/server/infrastructure/session';
 import { UserRepository } from '$lib/server/infrastructure/user';
+import { UserRequestRepository } from '$lib/server/infrastructure/user-request';
 import {
 	LoginWithCredentialsUseCase,
 	RegisterWithCredentialsUseCase
 } from '$lib/server/use-cases/user';
-import { CreateUserRequestConfirmEmailUseCase } from '$lib/server/use-cases/user-request';
+import {
+	CreateUserRequestConfirmEmailUseCase,
+	CreateUserRequestUseCase,
+	SendEmailWithConfirmationCodeForUserRequestUseCase
+} from '$lib/server/use-cases/user-request';
 import { setRedirectSearchParam } from '$lib/shared/infrastructure/url-search-param';
 import { userRegistrationWithCredentialsFormDataSchema } from '$lib/shared/infrastructure/validators/register';
 import type { FormFail, FormParseFail } from '$lib/types';
@@ -25,19 +30,33 @@ const hasher = new PasswordHashingService();
 const userRepository = new UserRepository(hasher, database);
 const sessionRepository = new SessionRepository(database);
 const sessionService = new SessionService(sessionRepository, userRepository);
-const twoFactor = new OTPService();
+const otpService = new OTPService();
 const emailService = new EmailService();
-
+const userRequestRepository = new UserRequestRepository(hasher);
+const sendEmailWithConfirmationCodeForUserRequestUseCase =
+	new SendEmailWithConfirmationCodeForUserRequestUseCase(
+		userRepository,
+		userRequestRepository,
+		emailService
+	);
+const createUserRequestUseCase = new CreateUserRequestUseCase(
+	userRepository,
+	userRequestRepository
+);
 const createUserRequestConfirmEmailUseCase = new CreateUserRequestConfirmEmailUseCase(
-	twoFactor,
-	hasher,
-	emailService
+	otpService,
+	createUserRequestUseCase,
+	sendEmailWithConfirmationCodeForUserRequestUseCase
 );
 const registerWithCredentialsUseCase = new RegisterWithCredentialsUseCase(
 	createUserRequestConfirmEmailUseCase,
-	hasher
+	userRepository
 );
-const loginWithCredentialsUseCase = new LoginWithCredentialsUseCase(hasher, sessionService);
+const loginWithCredentialsUseCase = new LoginWithCredentialsUseCase(
+	hasher,
+	sessionService,
+	userRepository
+);
 
 export const actions: Actions = {
 	default: async ({ request, cookies, url, getClientAddress }) => {

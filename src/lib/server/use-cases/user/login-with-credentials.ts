@@ -10,7 +10,6 @@ import {
 } from '$lib/domain/user';
 import { UnexpectedError } from '$lib/errors';
 import type { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
-import { database } from '$lib/server/infrastructure/persistance';
 import type { Cookies, SessionService } from '$lib/server/infrastructure/session';
 import { UserRepository } from '$lib/server/infrastructure/user';
 import type { Option } from '$lib/types';
@@ -35,19 +34,18 @@ export class LoginWithCredentialsUseCase {
 	constructor(
 		private hasher: PasswordHashingService,
 		private sessionService: SessionService,
-		private db = database
+		private userRepository: UserRepository
 	) {}
 
 	async execute(ctx: UseCaseContext, input: UseCaseInput): Promise<UseCaseResult> {
 		try {
-			const userRepository = new UserRepository(this.hasher, this.db);
-			const user = await userRepository.findByEmail(input.email);
+			const user = await this.userRepository.findByEmail({ email: input.email });
 			if (!user) {
 				await this.simulatePasswordVerification();
 				return err(new UserDoesNotExistsError(input.email));
 			}
 
-			const password = await userRepository.findUserPasswordById(user.id);
+			const password = await this.userRepository.findUserPasswordById({ userId: user.id });
 			if (!password) {
 				await this.simulatePasswordVerification();
 				return err(

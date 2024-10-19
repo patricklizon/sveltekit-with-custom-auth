@@ -5,8 +5,7 @@ import { UserDoesNotExistsError, type UserPlainTextOTP } from '$lib/domain/user'
 import { UserRequestNonExistingError, type UserRequest } from '$lib/domain/user-request';
 import { UnexpectedError } from '$lib/errors';
 import type { EmailService } from '$lib/server/infrastructure/email';
-import type { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
-import { database, safeTxRollback } from '$lib/server/infrastructure/persistance';
+import { database, safeTxRollback, type TX } from '$lib/server/infrastructure/persistance';
 import { UserRepository } from '$lib/server/infrastructure/user';
 import { UserRequestRepository } from '$lib/server/infrastructure/user-request';
 
@@ -32,7 +31,8 @@ type UseCaseResult = Result<
  */
 export class SendEmailWithConfirmationCodeForUserRequestUseCase {
 	constructor(
-		private hasher: PasswordHashingService,
+		private userRepository: UserRepository,
+		private userRequestRepository: UserRequestRepository,
 		private emailService: EmailService,
 		private db = database
 	) {}
@@ -40,21 +40,21 @@ export class SendEmailWithConfirmationCodeForUserRequestUseCase {
 	/**
 	 * Executes the use case
 	 */
-	async execute(input: UseCaseInput): Promise<UseCaseResult> {
-		return this.db.transaction(async (tx) => {
+	async execute(input: UseCaseInput, tx?: TX): Promise<UseCaseResult> {
+		return (tx ?? this.db).transaction(async (txx) => {
 			try {
-				const userRequestRepository = new UserRequestRepository(this.hasher, tx);
-				const userRepository = new UserRepository(this.hasher, tx);
-
-				const userRequest = await userRequestRepository.findById(input.userId, input.userRequestId);
+				const userRequest = await this.userRequestRepository.findById({
+					userId: input.userId,
+					userRequestId: input.userRequestId
+				});
 				if (!userRequest) {
-					safeTxRollback(tx);
+					safeTxRollback(txx);
 					return err(new UserRequestNonExistingError(input.userRequestId));
 				}
 
-				const userEmail = await userRepository.getUserEmail(input.userId);
+				const userEmail = await this.userRepository.getUserEmail(input);
 				if (!userEmail) {
-					safeTxRollback(tx);
+					safeTxRollback(txx);
 					return err(new UserDoesNotExistsError(input.userId));
 				}
 
@@ -66,13 +66,13 @@ export class SendEmailWithConfirmationCodeForUserRequestUseCase {
 				});
 
 				if (sendResult.isErr()) {
-					safeTxRollback(tx);
+					safeTxRollback(txx);
 					return err(sendResult.error);
 				}
 
 				return ok(sendResult.value);
 			} catch (error) {
-				safeTxRollback(tx);
+				safeTxRollback(txx);
 				return err(new UnexpectedError(error));
 			}
 		});

@@ -18,7 +18,11 @@ const hasher = new PasswordHashingService();
 const userRepository = new UserRepository(hasher, database);
 const sessionRepository = new SessionRepository(database);
 const sessionService = new SessionService(sessionRepository, userRepository);
-const loginWithCredentialsUseCase = new LoginWithCredentialsUseCase(hasher, sessionService);
+const loginWithCredentialsUseCase = new LoginWithCredentialsUseCase(
+	hasher,
+	sessionService,
+	userRepository
+);
 
 export const actions: Actions = {
 	default: async (event) => {

@@ -6,13 +6,21 @@ import { UnexpectedErrorType } from '$lib/errors';
 import { RawPath } from '$lib/routes';
 import { OTPService } from '$lib/server/infrastructure/otp';
 import { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
+import { UserRepository } from '$lib/server/infrastructure/user';
+import { UserRequestRepository } from '$lib/server/infrastructure/user-request';
 import { CreatePasswordResetRequestUseCase } from '$lib/server/use-cases/user';
 import { resetPasswordStartProcessFormDataSchema } from '$lib/shared/infrastructure/validators';
 import type { FormFail, FormParseFail } from '$lib/types';
 
-const twoFactor = new OTPService();
+const otpService = new OTPService();
 const hasher = new PasswordHashingService();
-const createPasswordResetRequest = new CreatePasswordResetRequestUseCase(twoFactor, hasher);
+const userRequestRepository = new UserRequestRepository(hasher);
+const userRepository = new UserRepository(hasher);
+const createPasswordResetRequest = new CreatePasswordResetRequestUseCase(
+	userRepository,
+	userRequestRepository,
+	otpService
+);
 
 export const actions: Actions = {
 	default: async ({ request }) => {

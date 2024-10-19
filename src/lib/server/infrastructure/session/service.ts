@@ -36,7 +36,7 @@ export class SessionService {
 		const session = await this.sessionRepository.findById(sessionId);
 		if (!session) return;
 		console.log(session);
-		const user = await this.userRepository.findById(session.userId);
+		const user = await this.userRepository.findById({ userId: session.userId });
 		if (!user) return;
 
 		// TODO: enable and update through repository method

@@ -6,12 +6,20 @@ import { UserRequestErrorType } from '$lib/domain/user-request';
 import { UnexpectedErrorType } from '$lib/errors';
 import { RawPath } from '$lib/routes';
 import { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
+import { UserRequestRepository } from '$lib/server/infrastructure/user-request';
 import { ConfirmPasswordResetRequestUseCase } from '$lib/server/use-cases/user';
+import { IsUserRequestCorrectUseCase } from '$lib/server/use-cases/user-request';
 import { resetPasswordConfirmRequestFormDataSchema } from '$lib/shared/infrastructure/validators/reset-password';
 import type { FormFail, FormParseFail } from '$lib/types';
 
 const hasher = new PasswordHashingService();
-const confirmPasswordResetRequest = new ConfirmPasswordResetRequestUseCase(hasher);
+const userRequestRepository = new UserRequestRepository(hasher);
+const isUserRequestCorrect = new IsUserRequestCorrectUseCase(userRequestRepository);
+const confirmPasswordResetRequest = new ConfirmPasswordResetRequestUseCase(
+	hasher,
+	userRequestRepository,
+	isUserRequestCorrect
+);
 
 export const actions: Actions = {
 	default: async ({ request, locals }) => {

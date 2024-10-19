@@ -11,7 +11,6 @@ import {
 } from '$lib/domain/user-request';
 import { UnexpectedError } from '$lib/errors';
 import { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
-import { database } from '$lib/server/infrastructure/persistance';
 import { UserRequestRepository } from '$lib/server/infrastructure/user-request';
 
 type UseCaseInput = Readonly<{
@@ -40,7 +39,7 @@ export class ConfirmUserRequestUseCase {
 		private isUserRequestCorrectUseCase: IsUserRequestCorrectUseCase,
 
 		private hasher: PasswordHashingService,
-		private db = database
+		private userRequestRepository: UserRequestRepository
 	) {}
 
 	/**
@@ -48,7 +47,6 @@ export class ConfirmUserRequestUseCase {
 	 */
 	async execute(input: UseCaseInput): Promise<UseCaseResult> {
 		try {
-			const userRequestRepository = new UserRequestRepository(this.hasher, this.db);
 			const isRequestCorrectResult = await this.isUserRequestCorrectUseCase.execute(input);
 			if (isRequestCorrectResult.isErr()) {
 				return err(isRequestCorrectResult.error);
@@ -60,10 +58,10 @@ export class ConfirmUserRequestUseCase {
 				return err(new UserRequestInvalidCodeError(userRequest.id));
 			}
 
-			const confirmedUserRequest = await userRequestRepository.confirm(
-				input.userId,
-				userRequest.id
-			);
+			const confirmedUserRequest = await this.userRequestRepository.confirm({
+				userId: input.userId,
+				userRequestId: userRequest.id
+			});
 
 			return ok(confirmedUserRequest);
 		} catch (error) {

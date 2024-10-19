@@ -4,8 +4,7 @@ import { UserDoesNotExistsError, type User } from '$lib/domain/user';
 import { UserRequestType, type UserRequest } from '$lib/domain/user-request';
 import { UnexpectedError } from '$lib/errors';
 import type { OTPService } from '$lib/server/infrastructure/otp';
-import type { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
-import { database } from '$lib/server/infrastructure/persistance';
+import { database, type TX } from '$lib/server/infrastructure/persistance';
 import { UserRepository } from '$lib/server/infrastructure/user';
 import { UserRequestRepository } from '$lib/server/infrastructure/user-request';
 
@@ -17,29 +16,33 @@ type UseCaseResult = ResultAsync<UserRequest['id'], UserDoesNotExistsError | Une
 
 export class CreatePasswordResetRequestUseCase {
 	constructor(
-		private otp: OTPService,
-		private hasher: PasswordHashingService,
+		private userRepository: UserRepository,
+		private userRequestRepository: UserRequestRepository,
+		private otpService: OTPService,
 		private db = database
 	) {}
-	async execute(input: UseCaseInput): Promise<UseCaseResult> {
-		return this.db.transaction(async (tx) => {
+	async execute(input: UseCaseInput, tx?: TX): Promise<UseCaseResult> {
+		return (tx ?? this.db).transaction(async (txx) => {
 			try {
-				const userRepository = new UserRepository(this.hasher, tx);
-				const userRequestRepository = new UserRequestRepository(this.hasher, tx);
-
-				const user = await userRepository.findByEmail(input.email);
+				const user = await this.userRepository.findByEmail({ email: input.email }, txx);
 
 				if (!user) {
 					return err(new UserDoesNotExistsError(input.email));
 				}
 
-				await userRequestRepository.deleteAllOfTypeByUserId(UserRequestType.ResetPassword, user.id);
+				await this.userRequestRepository.deleteAllOfTypeByUserId(
+					{ type: UserRequestType.ResetPassword, userId: user.id },
+					txx
+				);
 
-				const requestId = await userRequestRepository.save({
-					otp: this.otp.generateOTP(),
-					userId: user.id,
-					type: UserRequestType.ResetPassword
-				});
+				const requestId = await this.userRequestRepository.save(
+					{
+						otp: this.otpService.generateOTP(),
+						userId: user.id,
+						type: UserRequestType.ResetPassword
+					},
+					txx
+				);
 
 				// TODO: implement notification through 'communication channel -> email'
 				// await this.sendCodeWithConfirmation.execute(user.email);

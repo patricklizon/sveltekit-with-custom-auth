@@ -6,10 +6,12 @@ import { safeCastId } from '$lib/domain/id';
 import { UserRequestErrorType, type UserRequest } from '$lib/domain/user-request';
 import { UnexpectedErrorType } from '$lib/errors';
 import { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
+import { UserRequestRepository } from '$lib/server/infrastructure/user-request';
 import { IsUserRequestCorrectUseCase } from '$lib/server/use-cases/user-request';
 
 const hasher = new PasswordHashingService();
-const isUserRequestCorrectUseCase = new IsUserRequestCorrectUseCase(hasher);
+const userRequestRepository = new UserRequestRepository(hasher);
+const isUserRequestCorrectUseCase = new IsUserRequestCorrectUseCase(userRequestRepository);
 
 export const load: LayoutServerLoad = async ({ params, locals }) => {
 	if (!locals.session || !locals.user) {

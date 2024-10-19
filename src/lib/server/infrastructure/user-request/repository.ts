@@ -1,31 +1,36 @@
 import { and, eq, ne } from 'drizzle-orm';
 
-import type { UserRequest, UserRequestSaveDTO } from '$lib/domain/user-request';
+import type { UserPlainTextOTP } from '$lib/domain/user';
+import type { UserRequest } from '$lib/domain/user-request';
 import type { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
 import {
+	database,
 	DatabaseReadError,
 	DatabaseWriteError,
 	userRequests,
-	type DB
+	type TX
 } from '$lib/server/infrastructure/persistance';
 import type { Option } from '$lib/types';
 
 export class UserRequestRepository {
 	constructor(
 		private hasher: PasswordHashingService,
-		private db: DB
+		private db = database
 	) {}
 
-	async save({ otp, type, userId }: Readonly<UserRequestSaveDTO>): Promise<UserRequest['id']> {
+	async save(
+		payload: { otp: UserPlainTextOTP; type: UserRequest['type']; userId: UserRequest['userId'] },
+		tx?: TX
+	): Promise<UserRequest['id']> {
 		try {
-			const [result] = await this.db
+			const [result] = await (tx ?? this.db)
 				.insert(userRequests)
 				.values({
-					// TODO: use libary for calculation i.e. add(now, minutesToMs(...))
+					// TODO: use library for calculation i.e. add(now, minutesToMs(...))
 					expiresAt: new Date(Date.now() + 1000 * 60 * 10),
-					hashedOTP: await this.hasher.hash(otp),
-					type,
-					userId
+					hashedOTP: await this.hasher.hash(payload.otp),
+					type: payload.type,
+					userId: payload.userId
 				})
 				.returning({ id: userRequests.id });
 
@@ -38,14 +43,16 @@ export class UserRequestRepository {
 	}
 
 	async findById(
-		userId: UserRequest['userId'],
-		requestId: UserRequest['id']
+		payload: { userId: UserRequest['userId']; userRequestId: UserRequest['id'] },
+		tx?: TX
 	): Promise<Option<UserRequest>> {
 		try {
-			const [result] = await this.db
+			const [result] = await (tx ?? this.db)
 				.select()
 				.from(userRequests)
-				.where(and(eq(userRequests.id, requestId), eq(userRequests.userId, userId)))
+				.where(
+					and(eq(userRequests.id, payload.userRequestId), eq(userRequests.userId, payload.userId))
+				)
 				.limit(1);
 
 			return result;
@@ -54,12 +61,15 @@ export class UserRequestRepository {
 		}
 	}
 
-	async findAllByUserId(userId: UserRequest['userId']): Promise<UserRequest['id'][]> {
+	async findAllByUserId(
+		payload: { userId: UserRequest['userId'] },
+		tx?: TX
+	): Promise<UserRequest['id'][]> {
 		try {
-			const result = await this.db
+			const result = await (tx ?? this.db)
 				.select({ id: userRequests.id })
 				.from(userRequests)
-				.where(eq(userRequests.userId, userId));
+				.where(eq(userRequests.userId, payload.userId));
 
 			return result.map((v) => v.id);
 		} catch (error) {
@@ -67,16 +77,21 @@ export class UserRequestRepository {
 		}
 	}
 
-	async confirm(userId: UserRequest['userId'], requestId: UserRequest['id']): Promise<UserRequest> {
+	async confirm(
+		payload: { userId: UserRequest['userId']; userRequestId: UserRequest['id'] },
+		tx?: TX
+	): Promise<UserRequest> {
 		try {
 			const now = new Date(Date.now());
-			const [result] = await this.db
+			const [result] = await (tx ?? this.db)
 				.update(userRequests)
 				.set({
 					expiresAt: now,
 					confirmedAt: now
 				})
-				.where(and(eq(userRequests.id, requestId), eq(userRequests.userId, userId)))
+				.where(
+					and(eq(userRequests.id, payload.userRequestId), eq(userRequests.userId, payload.userId))
+				)
 				.returning();
 
 			if (!result) throw new DatabaseWriteError('Inserting did not return any value');
@@ -88,31 +103,34 @@ export class UserRequestRepository {
 	}
 
 	async deleteAllOfTypeByUserId(
-		type: UserRequest['type'],
-		id: UserRequest['userId']
+		payload: { type: UserRequest['type']; userId: UserRequest['userId'] },
+		tx?: TX
 	): Promise<void> {
 		try {
-			await this.db
+			await (tx ?? this.db)
 				.delete(userRequests)
-				.where(and(eq(userRequests.userId, id), eq(userRequests.type, type)));
+				.where(and(eq(userRequests.userId, payload.userId), eq(userRequests.type, payload.type)));
 		} catch (error) {
 			throw new DatabaseWriteError(error);
 		}
 	}
 
 	async deleteAllOfTypeButOneByUserId(
-		type: UserRequest['type'],
-		requestId: UserRequest['id'],
-		id: UserRequest['userId']
+		payload: {
+			type: UserRequest['type'];
+			userRequestId: UserRequest['id'];
+			userId: UserRequest['userId'];
+		},
+		tx?: TX
 	): Promise<void> {
 		try {
-			await this.db
+			await (tx ?? this.db)
 				.delete(userRequests)
 				.where(
 					and(
-						ne(userRequests.id, requestId),
-						eq(userRequests.userId, id),
-						eq(userRequests.type, type)
+						ne(userRequests.id, payload.userRequestId),
+						eq(userRequests.userId, payload.userId),
+						eq(userRequests.type, payload.type)
 					)
 				);
 		} catch (error) {

@@ -8,6 +8,9 @@ import { UserRequestErrorType, UserRequestType } from '$lib/domain/user-request'
 import { UnexpectedErrorType } from '$lib/errors';
 import { RawPath } from '$lib/routes';
 import { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
+import { database } from '$lib/server/infrastructure/persistance';
+import { UserRepository } from '$lib/server/infrastructure/user';
+import { UserRequestRepository } from '$lib/server/infrastructure/user-request';
 import { ConfirmEmailUseCase } from '$lib/server/use-cases/user';
 import {
 	ConfirmUserRequestUseCase,
@@ -18,8 +21,14 @@ import { userRequestConfirmFormDataSchema } from '$lib/shared/infrastructure/val
 import type { FormParseFail } from '$lib/types';
 
 const hasher = new PasswordHashingService();
-const isUserRequestCorrect = new IsUserRequestCorrectUseCase(hasher);
-const confirmUserRequest = new ConfirmUserRequestUseCase(isUserRequestCorrect, hasher);
+const userRequestRepository = new UserRequestRepository(hasher);
+const isUserRequestCorrect = new IsUserRequestCorrectUseCase(userRequestRepository);
+const confirmUserRequest = new ConfirmUserRequestUseCase(
+	isUserRequestCorrect,
+	hasher,
+	userRequestRepository
+);
+const userRepository = new UserRepository(hasher, database);
 
 export const actions: Actions = {
 	default: async ({ request, locals }) => {
@@ -66,7 +75,7 @@ export const actions: Actions = {
 				return;
 			}
 			case UserRequestType.ConfirmUserEmail: {
-				const confirmEmail = new ConfirmEmailUseCase(hasher);
+				const confirmEmail = new ConfirmEmailUseCase(userRepository);
 				const result = await confirmEmail.execute({ userId: confirmResult.value.userId });
 				if (result.isErr()) {
 					switch (result.error.type) {

@@ -17,8 +17,7 @@ import {
 	type UserRequestNonExistingError
 } from '$lib/domain/user-request';
 import { UnexpectedError, UnexpectedErrorType } from '$lib/errors';
-import type { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
-import { database, safeTxRollback } from '$lib/server/infrastructure/persistance';
+import { database, safeTxRollback, type TX } from '$lib/server/infrastructure/persistance';
 import { UserRepository } from '$lib/server/infrastructure/user';
 import { userRegistrationWithCredentialsFormDataSchema } from '$lib/shared/infrastructure/validators/register';
 
@@ -42,32 +41,32 @@ export class RegisterWithCredentialsUseCase {
 	constructor(
 		// TODO: hide it as an implementation detail and inject requireddependencies.
 		private createUserRequestConfirmEmailUseCase: CreateUserRequestConfirmEmailUseCase,
-		private hasher: PasswordHashingService,
+		private userRepository: UserRepository,
 		private db = database
 	) {}
 
-	async execute(input: UseCaseInput): Promise<UseCaseResult> {
-		return this.db.transaction(async (tx) => {
+	async execute(input: UseCaseInput, tx?: TX): Promise<UseCaseResult> {
+		return (tx ?? this.db).transaction(async (txx) => {
 			try {
-				const userRepository = new UserRepository(this.hasher, tx);
-				const searchResult = await userRepository.findByEmail(input.email);
+				const searchResult = await this.userRepository.findByEmail({ email: input.email }, txx);
 
 				if (searchResult) {
-					safeTxRollback(tx);
+					safeTxRollback(txx);
 					return err(new UserAlreadyExistsError(input.email));
 				}
 
 				const validationResult = userRegistrationWithCredentialsFormDataSchema.safeParse(input);
 				if (!validationResult.success) {
-					safeTxRollback(tx);
+					safeTxRollback(txx);
 					return err(new UserValidationError(validationResult.error.message));
 				}
 
-				const result = await userRepository.save(
+				const result = await this.userRepository.save(
 					{
-						email: input.email
+						email: input.email,
+						password: input.password
 					},
-					input.password
+					txx
 				);
 
 				const confirmEmailResult = await this.createUserRequestConfirmEmailUseCase.execute({
@@ -75,7 +74,7 @@ export class RegisterWithCredentialsUseCase {
 				});
 
 				if (confirmEmailResult.isErr()) {
-					safeTxRollback(tx);
+					safeTxRollback(txx);
 					switch (confirmEmailResult.error.type) {
 						case EmailErrorType.Rejected:
 						case UserRequestErrorType.NonExisting:
@@ -88,7 +87,7 @@ export class RegisterWithCredentialsUseCase {
 
 				return ok({ userRequestId: confirmEmailResult.value.userRequestId });
 			} catch (error) {
-				safeTxRollback(tx);
+				safeTxRollback(txx);
 				return err(new UnexpectedError(error));
 			}
 		});

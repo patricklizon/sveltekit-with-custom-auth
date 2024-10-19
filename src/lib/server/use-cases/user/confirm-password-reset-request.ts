@@ -12,7 +12,7 @@ import {
 } from '$lib/domain/user-request';
 import { UnexpectedError } from '$lib/errors';
 import type { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
-import { database, safeTxRollback } from '$lib/server/infrastructure/persistance';
+import { database, safeTxRollback, type TX } from '$lib/server/infrastructure/persistance';
 import { UserRequestRepository } from '$lib/server/infrastructure/user-request';
 
 type UseCaseInput = Readonly<{
@@ -33,34 +33,37 @@ type UseCaseResult = Result<
 export class ConfirmPasswordResetRequestUseCase {
 	constructor(
 		private hasher: PasswordHashingService,
+		private userRequestRepository: UserRequestRepository,
+		private isUserRequestCorrectUseCase: IsUserRequestCorrectUseCase,
 		private db = database
 	) {}
 
-	async execute(input: UseCaseInput): Promise<UseCaseResult> {
-		return this.db.transaction(async (tx) => {
+	async execute(input: UseCaseInput, tx?: TX): Promise<UseCaseResult> {
+		return (tx ?? this.db).transaction(async (txx) => {
 			try {
-				const userRequestRepository = new UserRequestRepository(this.hasher, tx);
-				const isUserRequestCorrectUseCase = new IsUserRequestCorrectUseCase(this.hasher, tx);
-				const validationResult = await isUserRequestCorrectUseCase.execute(input);
+				const validationResult = await this.isUserRequestCorrectUseCase.execute(input);
 				if (validationResult.isErr()) {
-					safeTxRollback(tx);
+					safeTxRollback(txx);
 					return err(validationResult.error);
 				}
 
 				const isCorrect = await this.hasher.verify(validationResult.value.hashedOTP, input.otp);
 				if (isCorrect) {
-					safeTxRollback(tx);
+					safeTxRollback(txx);
 					return err(new UserRequestInvalidCodeError(input.userRequestId));
 				}
 
-				const result = await userRequestRepository.confirm(input.userId, input.userRequestId);
+				const result = await this.userRequestRepository.confirm({
+					userId: input.userId,
+					userRequestId: input.userRequestId
+				});
 
 				// TODO: implement notification through 'communication channel -> email'
 				// await this.sendEmailWithConfirmation.execute(user.email);
 
 				return ok(result);
 			} catch (error) {
-				safeTxRollback(tx);
+				safeTxRollback(txx);
 				return err(new UnexpectedError(error));
 			}
 		});

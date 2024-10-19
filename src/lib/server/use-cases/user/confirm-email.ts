@@ -2,8 +2,7 @@ import { err, ok, Result } from 'neverthrow';
 
 import { UserDoesNotExistsError, UserEmailAlreadyVerifiedError, type User } from '$lib/domain/user';
 import { UnexpectedError } from '$lib/errors';
-import type { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
-import { database, safeTxRollback } from '$lib/server/infrastructure/persistance';
+import { database, safeTxRollback, type TX } from '$lib/server/infrastructure/persistance';
 import { UserRepository } from '$lib/server/infrastructure/user';
 
 type UseCaseInput = Readonly<{
@@ -17,30 +16,29 @@ type UseCaseResult = Result<
 
 export class ConfirmEmailUseCase {
 	constructor(
-		private hasher: PasswordHashingService,
+		private userRepository: UserRepository,
 		private db = database
 	) {}
-	async execute(input: UseCaseInput): Promise<UseCaseResult> {
-		return this.db.transaction(async (tx) => {
+	async execute(input: UseCaseInput, tx?: TX): Promise<UseCaseResult> {
+		return (tx ?? this.db).transaction(async (txx) => {
 			try {
-				const userRepository = new UserRepository(this.hasher, tx);
-				const user = await userRepository.findById(input.userId);
+				const user = await this.userRepository.findById({ userId: input.userId });
 
 				if (!user) {
-					safeTxRollback(tx);
+					safeTxRollback(txx);
 					return err(new UserEmailAlreadyVerifiedError(input.userId));
 				}
 
 				if (user.isEmailVerified) {
-					safeTxRollback(tx);
+					safeTxRollback(txx);
 					return err(new UnexpectedError('Email already verified'));
 				}
 
-				await userRepository.setEmailAsVerified(input.userId);
+				await this.userRepository.setEmailAsVerified({ userId: input.userId });
 
 				return ok(true);
 			} catch (error: unknown) {
-				tx.rollback();
+				txx.rollback();
 				return err(new UnexpectedError(error));
 			}
 		});

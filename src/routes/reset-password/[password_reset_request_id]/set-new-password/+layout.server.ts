@@ -8,11 +8,15 @@ import { UserRequestErrorType, type UserRequest } from '$lib/domain/user-request
 import { UnexpectedErrorType } from '$lib/errors';
 import { RawPath } from '$lib/routes';
 import { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
+import { UserRequestRepository } from '$lib/server/infrastructure/user-request';
 import { IsAllowedToFinishPasswordResetProcessUseCase } from '$lib/server/use-cases/user';
+import { IsUserRequestCorrectUseCase } from '$lib/server/use-cases/user-request';
 
 const hasher = new PasswordHashingService();
+const userRequestRepository = new UserRequestRepository(hasher);
+const isUserRequestCorrectUseCase = new IsUserRequestCorrectUseCase(userRequestRepository);
 const isAllowedToFinishPasswordResetProcess = new IsAllowedToFinishPasswordResetProcessUseCase(
-	hasher
+	isUserRequestCorrectUseCase
 );
 
 export const load: LayoutServerLoad = async ({ params, locals }) => {

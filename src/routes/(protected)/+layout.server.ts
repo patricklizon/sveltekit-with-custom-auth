@@ -15,24 +15,38 @@ import { database } from '$lib/server/infrastructure/persistance';
 import { SessionService } from '$lib/server/infrastructure/session';
 import { SessionRepository } from '$lib/server/infrastructure/session/repository';
 import { UserRepository } from '$lib/server/infrastructure/user';
+import { UserRequestRepository } from '$lib/server/infrastructure/user-request';
 import { LogoutUseCase } from '$lib/server/use-cases/user';
-import { CreateUserRequestConfirmEmailUseCase } from '$lib/server/use-cases/user-request';
+import {
+	CreateUserRequestConfirmEmailUseCase,
+	CreateUserRequestUseCase,
+	SendEmailWithConfirmationCodeForUserRequestUseCase
+} from '$lib/server/use-cases/user-request';
 import { setRedirectSearchParam } from '$lib/shared/infrastructure/url-search-param';
 
 // TODO: Manage DI
-const twoFactor = new OTPService();
+const otpService = new OTPService();
 const emailService = new EmailService();
 const hasher = new PasswordHashingService();
 const userRepository = new UserRepository(hasher, database);
+const userRequestRepository = new UserRequestRepository(hasher, database);
 const sessionRepository = new SessionRepository(database);
 const sessionService = new SessionService(sessionRepository, userRepository);
 const logout = new LogoutUseCase(sessionService);
+const createUserRequestUseCase = new CreateUserRequestUseCase(
+	userRepository,
+	userRequestRepository
+);
+const sendEmailWithConfirmationCodeUseCase = new SendEmailWithConfirmationCodeForUserRequestUseCase(
+	userRepository,
+	userRequestRepository,
+	emailService
+);
 
 const createUserRequestConfirmEmailUseCase = new CreateUserRequestConfirmEmailUseCase(
-	twoFactor,
-
-	hasher,
-	emailService
+	otpService,
+	createUserRequestUseCase,
+	sendEmailWithConfirmationCodeUseCase
 );
 
 export const load: LayoutServerLoad = async ({ locals, cookies, url }) => {

@@ -8,14 +8,14 @@ import { sqlDefaultCreatedAt } from '../../utils';
 import { users } from './users';
 
 export const sessions = sqliteTable('sessions', {
-	id: text('id').notNull().primaryKey().$type<SessionId>(),
-	createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$default(sqlDefaultCreatedAt),
-	userId: text('user_id')
+	id: text().notNull().primaryKey().$type<SessionId>(),
+	createdAt: integer({ mode: 'timestamp' }).notNull().$default(sqlDefaultCreatedAt),
+	userId: text()
 		.notNull()
 		.references(() => users.id)
 		.$type<UserId>(),
-	expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
-	isTwoFactorVerified: integer('is_two_factor_verified', { mode: 'boolean' }).notNull()
+	expiresAt: integer({ mode: 'timestamp_ms' }).notNull(),
+	isTwoFactorVerified: integer({ mode: 'boolean' }).notNull()
 });
 
 export const sessionRelations = relations(sessions, ({ one }) => ({

@@ -10,18 +10,18 @@ import { sqlDefaultCreatedAt } from '../../utils';
 import { users } from './users';
 
 export const userRequests = sqliteTable('user_request', {
-	id: text('id').notNull().primaryKey().$default(createId).$type<UserRequestId>(),
-	userId: text('user_id')
+	id: text().notNull().primaryKey().$default(createId).$type<UserRequestId>(),
+	userId: text()
 		.notNull()
 		.references(() => users.id)
 		.$type<UserId>(),
 	// TODO: add strong type to suer request type
-	type: text('type').notNull().$type<UserRequestType>(),
+	type: text().notNull().$type<UserRequestType>(),
 	// TODO: add type -> .$type<UserRequestType>(),
-	hashedOTP: text('hashed_otp').notNull().$type<UserHashedOTP>(),
-	expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
-	createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$default(sqlDefaultCreatedAt),
-	confirmedAt: integer('confirmed_at', { mode: 'timestamp' })
+	hashedOTP: text().notNull().$type<UserHashedOTP>(),
+	expiresAt: integer({ mode: 'timestamp' }).notNull(),
+	createdAt: integer({ mode: 'timestamp' }).notNull().$default(sqlDefaultCreatedAt),
+	confirmedAt: integer({ mode: 'timestamp' })
 });
 
 export const userRequestsRelations = relations(userRequests, ({ one }) => ({

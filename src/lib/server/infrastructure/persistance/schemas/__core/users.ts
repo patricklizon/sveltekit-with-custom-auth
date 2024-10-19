@@ -20,25 +20,21 @@ import { userRequests } from './user-requests';
 export const users = sqliteTable(
 	'user',
 	{
-		id: text('id').notNull().primaryKey().$default(createId).$type<UserId>(),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.$default(sqlDefaultCreatedAt),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+		id: text().notNull().primaryKey().$default(createId).$type<UserId>(),
+		createdAt: integer({ mode: 'timestamp_ms' }).notNull().$default(sqlDefaultCreatedAt),
+		updatedAt: integer({ mode: 'timestamp_ms' })
 			.notNull()
 			.$default(sqlDefaultCreatedAt)
 			.$onUpdate(sqlDefaultUpdatedAt),
-		deletedAt: integer('deleted_at', { mode: 'timestamp_ms' }),
-		preferredTimeZone: text('preferred_time_zone').$type<TimeZone>(),
-		preferredLanguage: text('preferred_language').$type<Language>(),
-		email: text('email').notNull().unique(),
-		isEmailVerified: integer('is_email_verified', { mode: 'boolean' }).notNull().default(false),
-		isTTOPEnabled: integer('is_ttop_enabled', { mode: 'boolean' }).notNull().default(false),
-		isPasskeyEnabled: integer('is_passkey_enabled', { mode: 'boolean' }).notNull().default(false),
-		isSecurityKeyEnabled: integer('is_security_key_enabled', { mode: 'boolean' })
-			.notNull()
-			.default(false),
-		is2FAEnabled: integer('is_2fa_enabled', { mode: 'boolean' }).notNull().default(false)
+		deletedAt: integer({ mode: 'timestamp_ms' }),
+		preferredTimeZone: text().$type<TimeZone>(),
+		preferredLanguage: text().$type<Language>(),
+		email: text().notNull().unique(),
+		isEmailVerified: integer({ mode: 'boolean' }).notNull().default(false),
+		isTTOPEnabled: integer({ mode: 'boolean' }).notNull().default(false),
+		isPasskeyEnabled: integer({ mode: 'boolean' }).notNull().default(false),
+		isSecurityKeyEnabled: integer({ mode: 'boolean' }).notNull().default(false),
+		is2FAEnabled: integer({ mode: 'boolean' }).notNull().default(false)
 	},
 	(table) => ({
 		emailIdx: index('email_idx').on(table.email)
@@ -58,17 +54,13 @@ export const usersRelations = relations(users, ({ one, many }) => ({
  * Credentials for login with email
  */
 export const userPasswords = sqliteTable('user_password', {
-	userId: text('user_id')
+	userId: text()
 		.primaryKey()
 		.references(() => users.id)
 		.$type<UserId>(),
-	hashedPassword: text('hashed_password').notNull().$type<UserHashedPassword>(),
-	createdAt: integer('created_at', { mode: 'timestamp_ms' })
-		.notNull()
-		.$default(sqlDefaultCreatedAt),
-	updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-		.notNull()
-		.$onUpdate(sqlDefaultUpdatedAt)
+	hashedPassword: text().notNull().$type<UserHashedPassword>(),
+	createdAt: integer({ mode: 'timestamp_ms' }).notNull().$default(sqlDefaultCreatedAt),
+	updatedAt: integer({ mode: 'timestamp_ms' }).notNull().$onUpdate(sqlDefaultUpdatedAt)
 });
 
 export const usersPasswordsRelations = relations(userPasswords, ({ one }) => ({
@@ -85,18 +77,14 @@ export const usersPasswordsRelations = relations(userPasswords, ({ one }) => ({
 export const userExternalAccounts = sqliteTable(
 	'user_external_account',
 	{
-		id: text('id').primaryKey().notNull().$default(createId).$type<UserExternalAccountId>(),
-		userId: text('user_id')
+		id: text().primaryKey().notNull().$default(createId).$type<UserExternalAccountId>(),
+		userId: text()
 			.references(() => users.id)
 			.$type<UserId>(),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.$default(sqlDefaultCreatedAt),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.$onUpdate(sqlDefaultUpdatedAt),
-		providerId: text('provider_id').notNull().$type<ExternalAccountProviderId>(),
-		providerUserId: text('provider_user_id').notNull().$type<UserExternalAccountId>()
+		createdAt: integer({ mode: 'timestamp_ms' }).notNull().$default(sqlDefaultCreatedAt),
+		updatedAt: integer({ mode: 'timestamp_ms' }).notNull().$onUpdate(sqlDefaultUpdatedAt),
+		providerId: text().notNull().$type<ExternalAccountProviderId>(),
+		providerUserId: text().notNull().$type<UserExternalAccountId>()
 	},
 	(table) => ({
 		idIdx: uniqueIndex('id_idx').on(table.id),

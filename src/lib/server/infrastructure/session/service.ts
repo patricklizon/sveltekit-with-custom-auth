@@ -8,14 +8,9 @@ import type { SessionRepository } from './repository';
 import { safeCastId } from '$lib/domain/id';
 import type { Session, SessionId, SessionToken } from '$lib/domain/session';
 import type { User } from '$lib/domain/user';
-import type { Option } from '$lib/types';
+import type { Cookies, Option } from '$lib/types';
 
 export type RefreshSessionResult = { user: User; session: Session };
-
-export interface Cookies {
-	get(name: string, opts?: Record<string, unknown>): Option<string>;
-	set(name: string, value: string, opts: Record<string, unknown> & { path: string }): void;
-}
 
 type SessionFlags = {
 	isTwoFactorVerified: boolean;

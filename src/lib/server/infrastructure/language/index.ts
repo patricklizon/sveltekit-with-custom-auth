@@ -1,1 +1,1 @@
-export * from './accept-language-header-parser';
+export * from './service';

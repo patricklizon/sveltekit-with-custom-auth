@@ -1,6 +1,6 @@
 import type { Language, LanguagePreference } from '$lib/domain/language';
 
-type ParsedCollection = [first: LanguagePreference, ...rest: LanguagePreference[]];
+type LanguagePreferenceCollection = [first: LanguagePreference, ...rest: LanguagePreference[]];
 
 export class AcceptLanguageHeaderParser {
 	constructor(
@@ -12,7 +12,7 @@ export class AcceptLanguageHeaderParser {
 
 	private defaultPreference: LanguagePreference;
 
-	parse(header: string): ParsedCollection {
+	parse(header: string): LanguagePreferenceCollection {
 		const trimmed = header.trim();
 		if (!trimmed) {
 			return [this.defaultPreference];
@@ -45,6 +45,6 @@ export class AcceptLanguageHeaderParser {
 
 		if (!parsed.length) return [this.defaultPreference];
 
-		return parsed as ParsedCollection;
+		return parsed as LanguagePreferenceCollection;
 	}
 }

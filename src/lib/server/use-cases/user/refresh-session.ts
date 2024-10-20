@@ -1,7 +1,7 @@
 import type { Session } from '$lib/domain/session';
 import type { User } from '$lib/domain/user';
-import type { Cookies, SessionService } from '$lib/server/infrastructure/session';
-import type { Option } from '$lib/types';
+import type { SessionService } from '$lib/server/infrastructure/session';
+import type { Cookies, Option } from '$lib/types';
 
 type UseCaseInput = { cookies: Cookies };
 

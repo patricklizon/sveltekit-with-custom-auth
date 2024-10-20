@@ -1,30 +1,20 @@
 import { type Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 
-import { templateConfig } from '$lib/config';
-import { AcceptLanguageHeaderParser } from '$lib/server/infrastructure/language';
+import { LanguageService } from '$lib/server/infrastructure/language';
 import { PasswordHashingService } from '$lib/server/infrastructure/password-hashing';
 import { database } from '$lib/server/infrastructure/persistance';
 import { SessionService } from '$lib/server/infrastructure/session';
 import { SessionRepository } from '$lib/server/infrastructure/session/repository';
 import { UserRepository } from '$lib/server/infrastructure/user';
-import {
-	DetermineUserLanguagePreferenceUseCase,
-	RefreshSessionUseCase
-} from '$lib/server/use-cases/user';
+import { RefreshSessionUseCase } from '$lib/server/use-cases/user';
 
 const hasher = new PasswordHashingService();
 const userRepository = new UserRepository(hasher, database);
 const sessionRepository = new SessionRepository(database);
 const sessionService = new SessionService(sessionRepository, userRepository);
 const refreshSessionUseCase = new RefreshSessionUseCase(sessionService);
-const acceptLanguageHeaderParser = new AcceptLanguageHeaderParser(
-	templateConfig.supportedLanguages,
-	templateConfig.mainLanguage
-);
-const determineUserLanguagePreferenceUseCase = new DetermineUserLanguagePreferenceUseCase(
-	acceptLanguageHeaderParser
-);
+const languageService = new LanguageService();
 
 /**
  * Handles session refresh for the application.
@@ -64,11 +54,23 @@ const handlePreferredLanguage: Handle = async ({ event, resolve }) => {
 		return resolve(event);
 	}
 
-	const header = event.request.headers.get('Accept-Language') ?? '';
-	const language = determineUserLanguagePreferenceUseCase.execute({ header });
+	const cookie = languageService.getLanguageFromCookie({ cookies: event.cookies });
+	if (cookie) {
+		event.locals.acceptLanguage = cookie;
+		return resolve(event);
+	}
 
-	event.locals.acceptLanguage = language;
+	const header = languageService.getLanguageFromAcceptLanguageHeader({
+		headers: event.request.headers
+	});
+	if (header) {
+		languageService.setLanguageCookie({ cookies: event.cookies, language: header });
+		event.locals.acceptLanguage = header;
+		return resolve(event);
+	}
 
+	const defaultLanguage = languageService.getMainLanguage();
+	event.locals.acceptLanguage = defaultLanguage;
 	return resolve(event);
 };
 

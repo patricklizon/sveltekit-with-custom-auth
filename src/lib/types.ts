@@ -18,3 +18,8 @@ export type FormFail<T extends Option<Record<string, unknown>> = Option<Record<s
 		errorType: string;
 		errorMessage: string;
 	};
+
+export interface Cookies {
+	get(name: string, opts?: Record<string, unknown>): Option<string>;
+	set(name: string, value: string, opts: Record<string, unknown> & { path: string }): void;
+}

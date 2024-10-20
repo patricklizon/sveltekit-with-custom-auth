@@ -1,7 +1,6 @@
 export * from './confirm-email';
 export * from './confirm-password-reset-request';
 export * from './create-password-reset-request';
-export * from './determine-user-language-preference';
 export * from './finish-password-reset-process';
 export * from './is-allowed-to-finish-password-reset-process';
 export * from './is-allowed-to-start-password-reset-process';

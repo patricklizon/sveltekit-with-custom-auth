@@ -1,4 +1,5 @@
-import type { Cookies, SessionService } from '$lib/server/infrastructure/session';
+import type { SessionService } from '$lib/server/infrastructure/session';
+import type { Cookies } from '$lib/types';
 
 export class LogoutUseCase {
 	constructor(private sessionService: SessionService) {}

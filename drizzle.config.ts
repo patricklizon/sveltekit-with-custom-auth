@@ -1,6 +1,7 @@
-import z from 'zod';
-import { defineConfig } from 'drizzle-kit';
 import path from 'node:path';
+
+import { defineConfig } from 'drizzle-kit';
+import z from 'zod';
 
 const dbCredentialsSchema = z.object({
 	DB_URL: z.string().min(1, 'Database URL is required')

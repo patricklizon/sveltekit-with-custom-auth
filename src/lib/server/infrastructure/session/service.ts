@@ -40,10 +40,11 @@ export class SessionService {
 		// }
 
 		if (Date.now() >= session.expiresAt.getTime()) {
-			await this.invalidate(sessionId);
-			// db.execute('DELETE FROM session WHERE id = ?', [sessionId]);
+			await this.sessionRepository.delete(sessionId);
 			return;
 		}
+
+		// TODO: add lib for date manipulation
 		if (Date.now() >= session.expiresAt.getTime() - 1000 * 60 * 60 * 24 * 15) {
 			session.expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
 		}
@@ -64,10 +65,6 @@ export class SessionService {
 		});
 
 		return { session, token };
-	}
-
-	async invalidate(sessionId: Session['id']): Promise<void> {
-		await this.sessionRepository.delete(sessionId);
 	}
 
 	async invalidateAllByUserId(userId: Session['userId']): Promise<void> {

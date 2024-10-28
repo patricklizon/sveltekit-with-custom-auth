@@ -49,15 +49,26 @@ const handlePreferredLanguage: Handle = async ({ event, resolve }) => {
 		return resolve(event);
 	}
 
-	if (event.locals.user?.preferredLanguage) {
-		event.locals.acceptLanguage = event.locals.user.preferredLanguage;
+	const languageFromCookieResult = languageService.getLanguageFromCookie({
+		cookies: event.cookies
+	});
+	if (languageFromCookieResult.isErr()) return resolve(event);
+	if (languageFromCookieResult.value) {
+		event.locals.acceptLanguage = languageFromCookieResult.value;
 		return resolve(event);
 	}
 
-	const cookie = languageService.getLanguageFromCookie({ cookies: event.cookies });
-	if (cookie) {
-		event.locals.acceptLanguage = cookie;
-		return resolve(event);
+	if (event.locals.user?.preferredLanguage) {
+		const userPreferredLanguage = event.locals.user.preferredLanguage;
+		const setCookieResult = languageService.setLanguageCookie({
+			cookies: event.cookies,
+			language: userPreferredLanguage
+		});
+		// TODO: cleanup user preferred language when it's not 'ok'
+		if (setCookieResult.isOk()) {
+			event.locals.acceptLanguage = userPreferredLanguage;
+			return resolve(event);
+		}
 	}
 
 	const header = languageService.getLanguageFromAcceptLanguageHeader({

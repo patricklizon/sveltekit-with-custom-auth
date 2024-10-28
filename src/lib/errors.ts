@@ -3,23 +3,23 @@
  * It provides a base `DomainError` class for specific domain errors and an `UnexpectedError` class for wrapping unknown errors.
  */
 
-import type { Option, Nothing } from './types';
+import type { Option, Nothing, JsonSafeData } from './types';
 
 /**
  * Abstract base class for domain-specific errors.
  *
  * It's useful for creating a hierarchy of domain-specific errors that can carry additional context.
  */
-export abstract class DomainError<
+export abstract class BaseError<
 	TErrorType extends string,
 	TData extends Option<Record<string, unknown>> | unknown = Nothing
 > extends Error {
 	constructor(
 		readonly type: TErrorType,
-		readonly data: TData,
-		message?: string
+		message: string,
+		readonly data?: TData
 	) {
-		super(message ?? `Domain error of type: ${type}`);
+		super(message);
 		this.name = type;
 		this.type = type;
 		this.data = data;
@@ -64,5 +64,11 @@ export class UnexpectedError extends Error {
 	private static getErrorMessage(error: unknown): string {
 		if (error instanceof Error) return error.message;
 		return String(error);
+	}
+}
+
+export class ValidationError extends BaseError<'validation', JsonSafeData> {
+	constructor(message: string, incorrectData: JsonSafeData) {
+		super('validation', message, incorrectData);
 	}
 }

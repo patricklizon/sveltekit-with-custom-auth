@@ -11,7 +11,7 @@ export const load: LayoutServerLoad = async ({ url, locals }) => {
 
 	const fallbackRoute = resolveRoute(RawPath.Home, {});
 	const currentURL = new URL(url.href);
-	// TODO: verify and add sentry
+	// TODO: verify and add sentry, mapErr should not console.error
 	const redirectRoute =
 		readRedirectSearchParam(currentURL).mapErr(console.error).unwrapOr(fallbackRoute) ??
 		fallbackRoute;

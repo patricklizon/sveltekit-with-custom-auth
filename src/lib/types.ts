@@ -1,5 +1,17 @@
 export type Nothing = undefined | null;
 
+export type Primitive = string | number | boolean | symbol | bigint | Nothing;
+
+export type JsonSafePrimitive = string | number | boolean;
+
+export type JsonSafeArray = (Nothing | JsonSafePrimitive | JsonSafeRecord)[];
+
+export type JsonSafeRecord = Record<string | number, Nothing | JsonSafePrimitive | JsonSafeArray>;
+
+export type JsonSafeData = Nothing | JsonSafePrimitive | JsonSafeArray | JsonSafeRecord;
+
+export type URLSafePrimitive = string | number | boolean;
+
 export type Option<Something> = Something | Nothing;
 
 export type Enum<T extends Record<string, string>> = T[keyof T];

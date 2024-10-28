@@ -10,7 +10,7 @@
 
 import type { UserRequest } from './type';
 
-import { DomainError } from '$lib/errors';
+import { BaseError } from '$lib/errors';
 import type { Enum } from '$lib/types';
 
 export const UserRequestErrorType = {
@@ -22,51 +22,47 @@ export const UserRequestErrorType = {
 
 export type UserRequestErrorType = Enum<typeof UserRequestErrorType>;
 
-export class UserRequestExpiredError extends DomainError<
+export class UserRequestExpiredError extends BaseError<
 	typeof UserRequestErrorType.Expired,
 	{ expiredAt: Date }
 > {
 	constructor(expiredAt: Date) {
 		super(
 			UserRequestErrorType.Expired,
-			{ expiredAt },
 			// TODO: format date
-			`Token expired at ${expiredAt.getTime()}`
+			`Token expired at ${expiredAt.getTime()}`,
+			{ expiredAt }
 		);
 	}
 }
 
-export class UserRequestNonExistingError extends DomainError<
+export class UserRequestNonExistingError extends BaseError<
 	typeof UserRequestErrorType.NonExisting,
 	{ userRequestId: UserRequest['id'] }
 > {
 	constructor(userRequestId: UserRequest['id']) {
-		super(UserRequestErrorType.NonExisting, { userRequestId });
+		super(UserRequestErrorType.NonExisting, 'User request does not exists.', { userRequestId });
 	}
 }
 
-export class UserRequestInvalidCodeError extends DomainError<
+export class UserRequestInvalidCodeError extends BaseError<
 	typeof UserRequestErrorType.InvalidVerificationCode,
 	{ userRequestId: UserRequest['id'] }
 > {
 	constructor(userRequestId: UserRequest['id']) {
-		super(
-			UserRequestErrorType.InvalidVerificationCode,
-			{ userRequestId },
-			`Entered code is invalid`
-		);
+		super(UserRequestErrorType.InvalidVerificationCode, `Entered code is invalid`, {
+			userRequestId
+		});
 	}
 }
 
-export class UserRequestNonConfirmedError extends DomainError<
+export class UserRequestNonConfirmedError extends BaseError<
 	typeof UserRequestErrorType.NotConfirmed,
 	{ userRequestId: UserRequest['id'] }
 > {
 	constructor(userRequestId: UserRequest['id']) {
-		super(
-			UserRequestErrorType.NotConfirmed,
-			{ userRequestId },
-			'Password change request was not verified.'
-		);
+		super(UserRequestErrorType.NotConfirmed, 'Password change request was not verified.', {
+			userRequestId
+		});
 	}
 }

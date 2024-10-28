@@ -33,10 +33,12 @@ export class UserRepository {
 				const [result] = await txx
 					.insert(users)
 					.values({
-						email: payload.email
+						email: payload.email.trim()
 					})
 					.returning();
-				if (!result) throw new DatabaseWriteError('Updating did not return any value');
+				if (!result) {
+					throw new DatabaseWriteError('Updating did not return any value');
+				}
 
 				await txx.insert(userPasswords).values({
 					hashedPassword: await this.hasher.hash(payload.password),

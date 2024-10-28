@@ -53,7 +53,7 @@ export const actions: Actions = {
 				}
 
 				case UnexpectedErrorType: {
-					throw error(500, result.error);
+					throw error(500, 'Unexpected error happened');
 				}
 			}
 		}

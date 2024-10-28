@@ -37,7 +37,7 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 				throw redirect(302, resolveRoute(RawPath.ResetPassword, {}));
 			}
 			case UnexpectedErrorType: {
-				throw error(500, isAllowedToStartProcessResult.error);
+				throw error(500, 'Unexpected error happened');
 			}
 		}
 	}

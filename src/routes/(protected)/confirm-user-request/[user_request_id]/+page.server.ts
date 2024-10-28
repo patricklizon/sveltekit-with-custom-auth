@@ -81,7 +81,7 @@ export const actions: Actions = {
 					switch (result.error.type) {
 						case UserErrorType.NonExisting:
 						case UnexpectedErrorType: {
-							throw error(500, result.error);
+							throw error(500, 'Unexpected error happened');
 						}
 						// TODO: do not break the app, log errowr
 						case UserErrorType.EmailAlreadyVerified: {

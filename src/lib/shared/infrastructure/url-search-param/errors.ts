@@ -1,28 +1,30 @@
-import { DomainError } from '$lib/errors';
+import { BaseError } from '$lib/errors';
+import type { JsonSafePrimitive, Option } from '$lib/types';
 
 export enum UrlSearchParamErrorType {
 	Encoding = 'url-search-param-error/Encoding',
 	Decoding = 'url-search-param-error/Decoding'
 }
 
-export class UrlSearchParamSerializationError extends DomainError<
+type Ctx = Option<Record<string, JsonSafePrimitive | JsonSafePrimitive[]>>;
+
+export class UrlSearchParamSerializationError extends BaseError<
 	UrlSearchParamErrorType.Encoding,
-	{ paramName: string }
+	{ paramName: string; context?: Ctx }
 > {
-	constructor(message: string, paramName: string) {
-		super(UrlSearchParamErrorType.Encoding, { paramName }, message);
+	constructor(message: string, paramName: string, context?: Ctx) {
+		super(UrlSearchParamErrorType.Encoding, message, { paramName, context });
 	}
 }
 
-export class UrlSearchParamDeserializationError extends DomainError<
+export class UrlSearchParamDeserializationError extends BaseError<
 	UrlSearchParamErrorType.Decoding,
-	{ paramName: string; decodedValue: unknown }
+	{ paramName: string; context?: Ctx }
 > {
-	constructor(valueType: string, paramName: string, decodedValue: unknown) {
-		super(
-			UrlSearchParamErrorType.Decoding,
-			{ paramName, decodedValue },
-			`Failed decoding '${paramName}=${valueType}'`
-		);
+	constructor(paramName: string, context?: Ctx) {
+		super(UrlSearchParamErrorType.Decoding, `Failed decoding '${paramName}'`, {
+			paramName,
+			context
+		});
 	}
 }

@@ -45,7 +45,7 @@ export const actions: Actions = {
 				userAgent: event.request.headers.get('user-agent') ?? 'Unknown'
 			},
 			{
-				email: parseResult.data.email,
+				email: parseResult.data.email.trim(),
 				password: parseResult.data.password
 			}
 		);
@@ -76,7 +76,7 @@ export const actions: Actions = {
 					// TODO: log error to logger (tbd. pnp wrapper for sentry, better stack)
 					// TODO: better message
 					console.log(loginResult.error);
-					throw error(500, loginResult.error);
+					throw error(500, 'Unexpected error happened');
 				}
 			}
 		}

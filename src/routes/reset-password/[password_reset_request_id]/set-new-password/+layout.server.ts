@@ -44,7 +44,7 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 				);
 			}
 			case UnexpectedErrorType: {
-				throw error(500, canFinishProcessResult.error);
+				throw error(500, 'Unexpected error happened');
 			}
 		}
 	}

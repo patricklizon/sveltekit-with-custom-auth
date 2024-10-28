@@ -93,7 +93,7 @@ export const actions: Actions = {
 				case UserErrorType.NonExisting:
 				case EmailErrorType.Rejected:
 				case UnexpectedErrorType: {
-					throw error(500, registrationResult.error);
+					throw error(500, 'Unexpected error happened');
 				}
 			}
 		}
@@ -118,7 +118,7 @@ export const actions: Actions = {
 				case UserErrorType.InvalidPassword:
 				case UnexpectedErrorType: {
 					console.error(loginResult.error);
-					return error(500, loginResult.error);
+					return error(500, 'Unexpected error happened');
 				}
 			}
 		}

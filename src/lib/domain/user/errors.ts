@@ -10,7 +10,7 @@
 
 import type { User } from './types';
 
-import { DomainError } from '$lib/errors';
+import { BaseError } from '$lib/errors';
 import type { Enum } from '$lib/types';
 export const UserErrorType = {
 	AlreadyExists: 'domain/user/error/AlreadyExists',
@@ -23,47 +23,47 @@ export const UserErrorType = {
 
 export type UserErrorType = Enum<typeof UserErrorType>;
 
-export class UserValidationError extends DomainError<typeof UserErrorType.Validation> {
+export class UserValidationError extends BaseError<typeof UserErrorType.Validation> {
 	constructor(message: string) {
-		super(UserErrorType.Validation, undefined, message);
+		super(UserErrorType.Validation, message);
 	}
 }
 
-export class UserAlreadyExistsError extends DomainError<
+export class UserAlreadyExistsError extends BaseError<
 	typeof UserErrorType.AlreadyExists,
 	{ email: string }
 > {
 	constructor(email: string) {
-		super(UserErrorType.AlreadyExists, { email }, `User with email ${email} already exists`);
+		super(UserErrorType.AlreadyExists, `User with email ${email} already exists`, { email });
 	}
 }
 
-export class UserDoesNotExistsError extends DomainError<
+export class UserDoesNotExistsError extends BaseError<
 	typeof UserErrorType.NonExisting,
 	{ identifier: User['email'] | User['id'] }
 > {
 	constructor(identifier: User['email'] | User['id']) {
-		super(UserErrorType.NonExisting, { identifier }, 'User does not exists');
+		super(UserErrorType.NonExisting, 'User does not exists', { identifier });
 	}
 }
 
-export class UserEmailAlreadyVerifiedError extends DomainError<
+export class UserEmailAlreadyVerifiedError extends BaseError<
 	typeof UserErrorType.EmailAlreadyVerified,
 	{ identifier: User['id'] }
 > {
 	constructor(identifier: User['id']) {
-		super(UserErrorType.EmailAlreadyVerified, { identifier }, 'Email is already verified');
+		super(UserErrorType.EmailAlreadyVerified, 'Email is already verified', { identifier });
 	}
 }
 
-export class UserInvalidPasswordError extends DomainError<typeof UserErrorType.InvalidPassword> {
+export class UserInvalidPasswordError extends BaseError<typeof UserErrorType.InvalidPassword> {
 	constructor() {
-		super(UserErrorType.InvalidPassword, undefined, 'Invalid password');
+		super(UserErrorType.InvalidPassword, 'Invalid password');
 	}
 }
 
-export class UserCorruptionError extends DomainError<typeof UserErrorType.DataCorruption, unknown> {
+export class UserCorruptionError extends BaseError<typeof UserErrorType.DataCorruption, unknown> {
 	constructor(message: string, data?: unknown) {
-		super(UserErrorType.DataCorruption, data, message);
+		super(UserErrorType.DataCorruption, message, data);
 	}
 }

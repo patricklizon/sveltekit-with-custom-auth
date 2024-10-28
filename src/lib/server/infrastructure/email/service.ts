@@ -3,7 +3,7 @@ import { createTransport } from 'nodemailer';
 import { z } from 'zod';
 
 import { env as privateEnv } from '$env/dynamic/private';
-import { EmailRejectedError } from '$lib/domain/email/error';
+import { EmailRejectedError } from '$lib/domain/email';
 import { UnexpectedError } from '$lib/errors';
 
 const schema = z.object({

@@ -72,7 +72,7 @@ export const actions: Actions = {
 					throw redirect(302, resolveRoute(RawPath.ResetPasswordVerify, {}));
 				}
 				case UnexpectedErrorType: {
-					throw error(500, confirmResult.error);
+					throw error(500, 'Unexpected error happened');
 				}
 			}
 		}

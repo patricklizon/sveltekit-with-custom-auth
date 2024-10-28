@@ -7,10 +7,11 @@ import {
 	sep
 } from './config';
 import { UrlSearchParamDeserializationError } from './errors';
-import type { UrlSearchParamName } from './types';
-import { normalizeAbsoluteUrlPath } from './utils';
+import { urlSearchParamMaxLengthByName, type UrlSearchParamName } from './types';
+import { mapStringToAbsoluteUrlPath } from './utils';
 
-import type { Option } from '$lib/types';
+import type { Option, URLSafePrimitive } from '$lib/types';
+import { isNothing } from '$lib/utils';
 
 /**
  * Represents the context for reading URL search parameters.
@@ -65,11 +66,11 @@ function readApplicationUrlStrategy(
 	const value = ctx.url.searchParams.get(paramName);
 	if (!value) return ok(undefined);
 
-	const decoded = decodeURIComponent(normalizeAbsoluteUrlPath(value));
+	const decoded = decodeURIComponent(mapStringToAbsoluteUrlPath(value));
 	const prefix = SerializationPrefix.AppRoute;
 
 	if (!decoded.startsWith(prefix)) {
-		return err(new UrlSearchParamDeserializationError(prefix, paramName, ''));
+		return err(new UrlSearchParamDeserializationError(paramName, { prefix }));
 	}
 
 	return ok(decoded.slice(prefix.length));
@@ -80,15 +81,19 @@ function readApplicationUrlStrategy(
  */
 function readPrimitiveStrategy(
 	ctx: Readonly<UrlSearchParamReadContext>
-): Result<Option<string | number | boolean>, UrlSearchParamDeserializationError> {
+): Result<Option<URLSafePrimitive>, UrlSearchParamDeserializationError> {
 	const paramName = urlSearchParamDisplayNameByUrlSearchParamName[ctx.paramName];
 	const value = ctx.url.searchParams.get(paramName);
 	if (!value) return ok(undefined);
 
-	const decoded = decodeURIComponent(normalizeAbsoluteUrlPath(value));
+	const isLongerThanAllowed = value.length > urlSearchParamMaxLengthByName[ctx.paramName];
+	if (isLongerThanAllowed) {
+		return err(new UrlSearchParamDeserializationError(paramName, { isLongerThanAllowed }));
+	}
+
+	const decoded = decodeURIComponent(mapStringToAbsoluteUrlPath(value));
 	const [prefix, ...rest] = decoded.split(sep);
-	// TODO: use isNil. When it's empty string "", something went wrong and should be handled in switch/case
-	if (!prefix) return ok(undefined);
+	if (isNothing(prefix)) return ok(undefined);
 
 	const decodedValue = rest.join('');
 
@@ -99,29 +104,50 @@ function readPrimitiveStrategy(
 
 		case SerializationPrefix.Number: {
 			const parsedFloat = Number.parseFloat(decodedValue);
-			if (Number.isNaN(parsedFloat)) {
-				return err(new UrlSearchParamDeserializationError(prefix, paramName, decodedValue));
+			const isNotANumber = Number.isNaN(parsedFloat);
+			const isNotFinite = !Number.isFinite(parsedFloat);
+			const isOutOfSafeRange =
+				Number.MIN_SAFE_INTEGER > parsedFloat || parsedFloat > Number.MAX_SAFE_INTEGER;
+
+			if (isNotANumber || isNotFinite || isOutOfSafeRange) {
+				return err(
+					new UrlSearchParamDeserializationError(paramName, {
+						prefix,
+						isNotANumber,
+						isNotFinite,
+						isOutOfSafeRange
+					})
+				);
 			}
 
 			return ok(parsedFloat);
 		}
 
 		case SerializationPrefix.Boolean: {
-			switch (decodedValue) {
-				case 'true': {
+			const maybeBoolean = decodedValue.toLowerCase();
+			const truthy = new Set(['true', 'yes', 'ok', '1']);
+			const falsy = new Set(['false', 'no', '0']);
+
+			switch (true) {
+				case truthy.has(maybeBoolean): {
 					return ok(true);
 				}
-				case 'false': {
+				case falsy.has(maybeBoolean): {
 					return ok(false);
 				}
 				default: {
-					return err(new UrlSearchParamDeserializationError(prefix, paramName, decodedValue));
+					return err(
+						new UrlSearchParamDeserializationError(paramName, {
+							prefix,
+							validValues: [...truthy, ...falsy]
+						})
+					);
 				}
 			}
 		}
 
 		default: {
-			return err(new UrlSearchParamDeserializationError(prefix, paramName, decodedValue));
+			return err(new UrlSearchParamDeserializationError(paramName, { prefix }));
 		}
 	}
 }

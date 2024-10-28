@@ -1,12 +1,12 @@
 import { BaseError } from '$lib/errors';
-import type { JsonSafePrimitive, Option } from '$lib/types';
+import type { JSONSafePrimitive, Option } from '$lib/types';
 
 export enum UrlSearchParamErrorType {
 	Encoding = 'url-search-param-error/Encoding',
 	Decoding = 'url-search-param-error/Decoding'
 }
 
-type Ctx = Option<Record<string, JsonSafePrimitive | JsonSafePrimitive[]>>;
+type Ctx = Option<Record<string, JSONSafePrimitive | JSONSafePrimitive[]>>;
 
 export class UrlSearchParamSerializationError extends BaseError<
 	UrlSearchParamErrorType.Encoding,

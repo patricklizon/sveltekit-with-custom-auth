@@ -7,7 +7,7 @@ import {
 } from './config';
 import { UrlSearchParamSerializationError } from './errors';
 import { UrlSearchParamName } from './types';
-import { mapURLtoAbsoluteUrlPathWithSearchAndFragment, normalizeAbsoluteUrlPath } from './utils';
+import { mapURLtoAbsoluteUrlPathWithSearchAndFragment, mapStringToAbsoluteUrlPath } from './utils';
 
 /**
  * Represents the context for writing URL search parameters.
@@ -61,8 +61,8 @@ function setApplicationUrlStrategy(
 	href: Readonly<string>
 ): URL {
 	const result = new URL(ctx.url);
-	const absolutePath = mapURLtoAbsoluteUrlPathWithSearchAndFragment(new URL(href, 'http://x'));
-	const value = encodeURI(normalizeAbsoluteUrlPath(absolutePath));
+	const absoluteInAppPath = mapURLtoAbsoluteUrlPathWithSearchAndFragment(new URL(href, 'http://x'));
+	const value = encodeURI(mapStringToAbsoluteUrlPath(absoluteInAppPath));
 	if (!value) return result;
 
 	const displayName = urlSearchParamDisplayNameByUrlSearchParamName[ctx.paramName];
@@ -84,18 +84,18 @@ function setPrimitiveStrategy(
 
 	const paramName = urlSearchParamDisplayNameByUrlSearchParamName[ctx.paramName];
 
-	let encodedValue;
+	let value;
 	switch (typeof primitive) {
 		case 'string': {
-			encodedValue = SerializationPrefix.String + primitive;
+			value = SerializationPrefix.String + primitive;
 			break;
 		}
 		case 'boolean': {
-			encodedValue = SerializationPrefix.Boolean + primitive;
+			value = SerializationPrefix.Boolean + primitive;
 			break;
 		}
 		case 'number': {
-			encodedValue = SerializationPrefix.Number + primitive;
+			value = SerializationPrefix.Number + primitive;
 			break;
 		}
 		default: {
@@ -108,7 +108,7 @@ function setPrimitiveStrategy(
 		}
 	}
 
-	result.searchParams.set(paramName, encodeURIComponent(encodedValue));
+	result.searchParams.set(paramName, encodeURIComponent(value));
 
 	return ok(result);
 }

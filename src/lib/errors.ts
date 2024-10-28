@@ -3,7 +3,7 @@
  * It provides a base `DomainError` class for specific domain errors and an `UnexpectedError` class for wrapping unknown errors.
  */
 
-import type { Option, Nothing, JsonSafeData } from './types';
+import type { Option, Nothing, JSONSafeData } from './types';
 
 /**
  * Abstract base class for domain-specific errors.
@@ -67,8 +67,8 @@ export class UnexpectedError extends Error {
 	}
 }
 
-export class ValidationError extends BaseError<'validation', JsonSafeData> {
-	constructor(message: string, incorrectData: JsonSafeData) {
+export class ValidationError extends BaseError<'validation', JSONSafeData> {
+	constructor(message: string, incorrectData: JSONSafeData) {
 		super('validation', message, incorrectData);
 	}
 }
